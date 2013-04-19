@@ -41,7 +41,7 @@ int main()
     else{
       int proper_cmd;
       // char *args[]={"/bin/ls","-al", (char*)0 };
-      char *arg[]={inputString, 0, (char*)0 };
+      //char *arg[]={inputString, 0, (char*)0 };
       char *args[MAXLINE];
       int count = 1;
 
@@ -51,15 +51,31 @@ int main()
         //printf("%s", args[count]);
         count++;
       }
+      
 
       // forking 
       pid = fork();
       if(pid == 0){
         // in child process
-        proper_cmd = execvp(args[0], args);
-        if(proper_cmd<0){
-          printf("ERROR: %s: command not found\n", inputString);
+
+        char out = *args[2];
+        printf("%c\n", out);
+        if(out == '>'){
+          *args[2] = "\0";
+          out = 'k';
+          printf("setting out value to \'k\'\n it is: %c \n", out);
+          FILE *outfile = fopen(args[3], "w");
+          fprintf(outfile, "%s\n", args[1]);
+          fclose(outfile);
+          dup2(fileno(outfile), 1);
           exit(1);
+        }
+        else{
+          proper_cmd = execvp(args[0], args); 
+          if(proper_cmd<0){
+            printf("ERROR: %s: command not found\n", inputString);
+            exit(1);
+          } 
         }
       }
       else{
