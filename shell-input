@@ -1,4 +1,4 @@
-o "Shell Test"
+echo "Shell Test"
 mkdir shell_test_tmp
 ls -sa shell_test_tmp
 echo "Begin shell test_tmp"
