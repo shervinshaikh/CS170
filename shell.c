@@ -39,8 +39,7 @@ int main()
       printf("%s\n", restOfLine);
     }
     else{
-
-      printf("ERROR: %s\n", );
+      printf("ERROR: \"%s\" is not a proper command\n", inputString);
     }
 
     
