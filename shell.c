@@ -29,23 +29,37 @@ int main()
     printf("ssih:>");
     fgets(inputString, MAXLINE, stdin);
 
-    int slen = 0, size = 0;
-    while(inputString[i] != '\n'){
-      if(inputString[i] == '|' || inputString[i] == '<' || inputString [i] == '>'){
-        size++;
+    int slen = 0, ncmd = 0;
+    while(inputString[slen] != '\n'){
+      if(inputString[slen] == '|' || inputString[slen] == '<' || inputString [slen] == '>'){
+        ncmd++;
       }
       slen++;
     }
-    debug("Number of commands: %d \n", size+1);
+    debug("Number of commands: %d \n", ncmd+1);
 
     // replaces newline with null
-    slen = strlen(inputString);
-    inputString[slen - 1] = 0;
+    slen = strlen(inputString) - 1;
+    inputString[slen] = 0;
 
     // exits the shell
     if((!strcmp(inputString, "exit")) || feof(stdin)) exit(0);
 
-    else{
+    // place redirect characters into a char array
+    char redirects[ncmd];
+    int i, j;
+    for(i=0, j=0; i<slen && j<ncmd; i++){
+      if(inputString[i] == '|' || inputString[i] == '<' || inputString [i] == '>'){
+        redirects[j] = inputString[i];
+        debug("Redirect %d value: %c \n", j, redirects[j]);
+        j++;
+      }
+    }
+
+    // place each command into a string array
+
+
+    //else{
       int proper_cmd;
       // char *args[]={"/bin/ls","-al", (char*)0 };
       //char *arg[]={inputString, 0, (char*)0 };
@@ -60,8 +74,9 @@ int main()
       }
       
 
-      // forking 
-      if ((pid = fork()) == -1){
+      // forking
+      pid = fork();
+      if (pid == -1){
         perror("Fork failed");
         exit(0);
       }
@@ -93,7 +108,7 @@ int main()
       else{
         wait(NULL);
       }
-    }
+    //}
 
     
     
