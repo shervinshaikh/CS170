@@ -57,15 +57,29 @@ int main()
     }
 
     // place each command into a string array
+    char *cmd[ncmd+1];
+    i = 1;
+    cmd[0] = strtok(inputString, "<|>");
+    debug("Command 1 is: %s \n", cmd[0]);
+    while(i <= ncmd){
+      cmd[i] = strtok(NULL, "<|>");
+      debug("Command %d is: %s \n", i+1, cmd[i]);
+      i++;
+    }
 
+    // for each command break up its flags
+    // for(i=0; i<=cmd; i++){
+
+    // }
 
     //else{
       int proper_cmd;
       // char *args[]={"/bin/ls","-al", (char*)0 };
       //char *arg[]={inputString, 0, (char*)0 };
+
+
       char *args[MAXLINE];
       int count = 1;
-
       args[0] = strtok(inputString, " ");
       while(args[count-1] != NULL){
         args[count] = strtok(NULL, " ");
