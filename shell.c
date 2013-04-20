@@ -54,32 +54,35 @@ int main()
       
 
       // forking 
-      pid = fork();
-      if(pid == 0){
+      if ((pid = fork()) == -1){
+        perror("Fork failed");
+        exit(0);
+      }
+      // child process
+      else if(pid == 0){
         // in child process
-
-        char out = *args[2];
-        printf("%c\n", out);
-        if(out == '>'){
-          *args[2] = "\0";
-          out = 'k';
-          printf("setting out value to \'k\'\n it is: %c \n", out);
-          FILE *outfile = fopen(args[3], "w");
-          fprintf(outfile, "%s\n", args[1]);
-          fclose(outfile);
-          dup2(fileno(outfile), 1);
-          exit(1);
-        }
-        else{
+        // char out = *args[2];
+        // printf("%c\n", out);
+        // if(out == '>'){
+        //   *args[2] = "\0";
+        //   out = 'k';
+        //   printf("setting out value to \'k\'\n it is: %c \n", out);
+        //   FILE *outfile = fopen(args[3], "w");
+        //   fprintf(outfile, "%s\n", args[1]);
+        //   fclose(outfile);
+        //   dup2(fileno(outfile), 1);
+        //   exit(1);
+        // }
+        // else{
           proper_cmd = execvp(args[0], args); 
           if(proper_cmd<0){
             printf("ERROR: %s: command not found\n", inputString);
             exit(1);
           } 
-        }
+        //}
       }
+      // parent process
       else{
-        // in parent process
         wait(NULL);
       }
     }
