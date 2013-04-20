@@ -13,6 +13,13 @@ Project 1
 
 #define MAXLINE 1024
 
+#define DEBUG
+#ifdef DEBUG
+    #define    debug(f,...)    fprintf(stderr,f,##__VA_ARGS__)
+#else
+    #define    debug(f,...)
+#endif
+
 int main()
 {
   char inputString[MAXLINE] = {0};
@@ -22,22 +29,22 @@ int main()
     printf("ssih:>");
     fgets(inputString, MAXLINE, stdin);
 
+    int slen = 0, size = 0;
+    while(inputString[i] != '\n'){
+      if(inputString[i] == '|' || inputString[i] == '<' || inputString [i] == '>'){
+        size++;
+      }
+      slen++;
+    }
+    debug("Number of commands: %d \n", size+1);
+
     // replaces newline with null
-    inputString[strlen(inputString) - 1] = 0;
+    slen = strlen(inputString);
+    inputString[slen - 1] = 0;
 
     // exits the shell
     if((!strcmp(inputString, "exit")) || feof(stdin)) exit(0);
 
-    // else if(strcmp(inputString, "pwd") == 0){
-    //   char directory[MAXLINE];
-    //   getcwd(directory, 1024);
-    //   printf("%s\n", directory);
-    // }
-    // else if(strncmp(inputString, "echo ", 5) == 0){
-    //   //char restOfLine[MAXLINE-4] = {0};
-    //   char *restOfLine = inputString + 5;
-    //   printf("%s\n", restOfLine);
-    // }
     else{
       int proper_cmd;
       // char *args[]={"/bin/ls","-al", (char*)0 };
@@ -60,7 +67,6 @@ int main()
       }
       // child process
       else if(pid == 0){
-        // in child process
         // char out = *args[2];
         // printf("%c\n", out);
         // if(out == '>'){
@@ -74,11 +80,13 @@ int main()
         //   exit(1);
         // }
         // else{
-          proper_cmd = execvp(args[0], args); 
-          if(proper_cmd<0){
-            printf("ERROR: %s: command not found\n", inputString);
-            exit(1);
-          } 
+
+
+        proper_cmd = execvp(args[0], args); 
+        if(proper_cmd<0){
+          printf("ERROR: %s: command not found\n", inputString);
+          exit(1);
+        } 
         //}
       }
       // parent process
