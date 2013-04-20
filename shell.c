@@ -67,17 +67,10 @@ int main()
       i++;
     }
 
-    // for each command break up its flags
-    // for(i=0; i<=cmd; i++){
-
-    // }
-
-    //else{
+    // TODO fix cd to actually move you around
+    // only 1 command needs to be run
+    if(ncmd == 0){
       int proper_cmd;
-      // char *args[]={"/bin/ls","-al", (char*)0 };
-      //char *arg[]={inputString, 0, (char*)0 };
-
-
       char *args[MAXLINE];
       int count = 1;
       args[0] = strtok(inputString, " ");
@@ -86,8 +79,6 @@ int main()
         //printf("%s", args[count]);
         count++;
       }
-      
-
       // forking
       pid = fork();
       if (pid == -1){
@@ -96,6 +87,26 @@ int main()
       }
       // child process
       else if(pid == 0){
+        proper_cmd = execvp(args[0], args); 
+        if(proper_cmd<0){
+          printf("ERROR: %s: command not found\n", inputString);
+          exit(1);
+        } 
+        //}
+      }
+      // parent process
+      else{
+        wait(NULL);
+      }
+    }
+
+    // either pipelining or I/O redirection
+    else{
+
+    }
+
+      // forking
+      
         // char out = *args[2];
         // printf("%c\n", out);
         // if(out == '>'){
@@ -111,17 +122,7 @@ int main()
         // else{
 
 
-        proper_cmd = execvp(args[0], args); 
-        if(proper_cmd<0){
-          printf("ERROR: %s: command not found\n", inputString);
-          exit(1);
-        } 
-        //}
-      }
-      // parent process
-      else{
-        wait(NULL);
-      }
+        
     //}
 
     
