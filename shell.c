@@ -26,6 +26,8 @@ void error(char inputString[]){
   exit(1);
 }
 
+
+// TODO: handle quotes as one arguement & don't break whitespaces
 void runCommand(char* command){
   char *args[MAXLINE];
   pid_t pid;
@@ -85,7 +87,7 @@ int main()
     for(i=0, j=0; i<slen && j<ncmd; i++){
       if(inputString[i] == '|' || inputString[i] == '<' || inputString [i] == '>'){
         redirects[j] = inputString[i];
-        debug("Redirect %d value: %c \n", j, redirects[j]);
+        debug("Redirect %d value: %c \n", j+1, redirects[j]);
         j++;
       }
     }
@@ -101,41 +103,65 @@ int main()
       i++;
     }
 
-    // TODO fix cd to actually move you around
-    // TODO revmoe extra stuff because its only 1 command that needs to be runmd;
+    // TODO: fix cd to actually move you around
+    // TODO: revmoe extra stuff because its only 1 command that needs to be runmd;
     if(ncmd == 0){
       runCommand(inputString);
     }
 
     // either pipelining or I/O redirection
     else{
-      // stdout to an outfile
-      if(redirects[ncmd-1] == '>'){
+      // file to stdin
+      if(redirects[0] == '<'){
         pid = fork();
         if(pid == -1){
           perror("Fork Failed");
           exit(0);
         }
         else if(pid == 0){
-          char *filename = strtok(cmd[ncmd], " ");
-          FILE *outfile = fopen(filename, "w");
-          // output from command gets placed into the file through piping
-          int oldstdout = dup(1);
-          dup2(fileno(outfile), 1);
-          fclose(outfile);
-          runCommand(cmd[ncmd-1]);
-          dup2(oldstdout,1);
+          char *filename = strtok(cmd[1], " ");
+          FILE *infile = fopen(filename, "r");
+          debug("input filename: %s \n", filename);
+          // input file replaces stdin
+          int oldstdout = dup(0);
+          dup2(fileno(infile), 0);
+          fclose(infile);
+          runCommand(cmd[0]);
+          dup2(oldstdout,0);
           close(oldstdout);
           exit(1);
-          //int proper_cmd = execvp(,); // this is just for 1 previous command
-          //if(proper_cmd<0) error();
         }
         else{
           wait(NULL);
         }
       }
+    }
 
-      // file to stdin
+    // stdout to an outfile
+    if(redirects[ncmd-1] == '>'){
+      pid = fork();
+      if(pid == -1){
+        perror("Fork Failed");
+        exit(0);
+      }
+      else if(pid == 0){
+        char *filename = strtok(cmd[ncmd], " ");
+        FILE *outfile = fopen(filename, "w");
+        debug("output filename: %s \n", filename);
+        // output from command gets placed into the file through piping
+        int oldstdout = dup(1);
+        dup2(fileno(outfile), 1);
+        fclose(outfile);
+        runCommand(cmd[ncmd-1]);
+        dup2(oldstdout,1);
+        close(oldstdout);
+        exit(1);
+        //int proper_cmd = execvp(,); // this is just for 1 previous command
+        //if(proper_cmd<0) error();
+      }
+      else{
+        wait(NULL);
+      }
     }
 
       // forking
