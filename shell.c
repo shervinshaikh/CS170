@@ -20,10 +20,43 @@ Project 1
     #define    debug(f,...)
 #endif
 
+
+void error(char inputString[]){
+  printf("ERROR: %s: command not found\n", inputString);
+  exit(1);
+}
+
+void runCommand(char* command){
+  char *args[MAXLINE];
+  pid_t pid;
+  int count = 1;
+  args[0] = strtok(command, " ");
+  while(args[count-1] != NULL){
+    args[count] = strtok(NULL, " ");
+    count++;
+  }
+  // forking
+  pid = fork();
+  if (pid == -1){
+    perror("Fork failed");
+    exit(0);
+  }
+  // child process
+  else if(pid == 0){
+    int proper_cmd = execvp(args[0], args); 
+    if(proper_cmd<0) error(command); 
+  }
+  // parent process
+  else{
+    wait(NULL);
+  }
+}
+
 int main()
 {
   char inputString[MAXLINE] = {0};
   pid_t pid;
+  //int mypipe[2];
 
   while(1){    
     printf("ssih:>");
@@ -68,41 +101,35 @@ int main()
     }
 
     // TODO fix cd to actually move you around
-    // only 1 command needs to be run
+    // TODO revmoe extra stuff because its only 1 command that needs to be runmd;
     if(ncmd == 0){
-      int proper_cmd;
-      char *args[MAXLINE];
-      int count = 1;
-      args[0] = strtok(inputString, " ");
-      while(args[count-1] != NULL){
-        args[count] = strtok(NULL, " ");
-        //printf("%s", args[count]);
-        count++;
-      }
-      // forking
-      pid = fork();
-      if (pid == -1){
-        perror("Fork failed");
-        exit(0);
-      }
-      // child process
-      else if(pid == 0){
-        proper_cmd = execvp(args[0], args); 
-        if(proper_cmd<0){
-          printf("ERROR: %s: command not found\n", inputString);
-          exit(1);
-        } 
-        //}
-      }
-      // parent process
-      else{
-        wait(NULL);
-      }
+      runCommand(inputString);
     }
 
     // either pipelining or I/O redirection
     else{
-
+      // stdout to an outfile
+      if(redirects[ncmd-1] == '>'){
+        pid = fork();
+        if(pid == -1){
+          perror("Fork Failed");
+          exit(0);
+        }
+        else if(pid == 0){
+          char *filename = strtok(cmd[ncmd], " ");
+          FILE *outfile = fopen(filename, "w");
+          // output from command gets placed into the file through piping
+          
+          dup2(fileno(outfile), 1);
+          fclose(outfile);
+          runCommand(cmd[ncmd-1]);
+          //int proper_cmd = execvp(,); // this is just for 1 previous command
+          //if(proper_cmd<0) error();
+        }
+        else{
+          wait(NULL);
+        }
+      }
     }
 
       // forking
