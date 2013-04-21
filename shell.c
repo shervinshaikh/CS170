@@ -108,7 +108,7 @@ int main()
       debug("Command %d is: %s \n", i+1, cmd[i]);
       i++;
     }
-
+    debug("Number of redirects: %d\n", nredirects);
     // TODO: fix cd to actually move you around
     // TODO: revmoe extra stuff because its only 1 command that needs to be runmd;
     if(nredirects == 0){
@@ -126,13 +126,14 @@ int main()
       // pipes[0] = read end
       // pipes[1] = write end
       int pipes[npipes*2];
-      int h;
+      int h = 0, u;
       // setting up pipes
-      for(h=0; h<npipes; h++){
-        if(pipe(pipes + h*2) < 0){
+      for(u=0; u<npipes; u++){
+        if(pipe(pipes + u*2) < 0){
           perror("Pipe creation failed");
           exit(0);
         }
+        else{ debug("initializing pipe(pipes+%d)\n", u*2); }
       }
 
       int cc = 0, y=0;
@@ -140,35 +141,41 @@ int main()
       for(h=0; h<=nredirects; h++){
         pid = fork();
         if(pid == 0){
-
+          //debug("about to exec %s, cc=%d\n", cmd[cc], cc);
           // if not first command, READ-pipe
           if(h != 0){
-            if(dup2(pipes[(cc-1)*2], 0) < 0){
+            if(dup2(pipes[(h-1)*2], 0) < 0){
               debug("read pipe");
               perror("Piping failed");
               exit(0);
             }
+            else{ debug("read pipe-0 for pipes[%d]\n", (h-1)*2); }
           }
 
           // if not last command, WRITE-pipe
           if(h != nredirects){
-            if(dup2(pipes[cc*2+1], 1) < 0){
+            if(dup2(pipes[h*2+1], 1) < 0){
               debug("write pipe");
               perror("Piping failed");
               exit(0);
             }
+            else{ debug("write pipe-1 for pipes[%d]\n", h*2+1); }
           }
 
           // close all pipes
-          debug("closing all pipes in loop\n");
-          for(y=0; y<npipes*2; y++){
-            close(pipes[y]);
+          //debug("closing all pipes in loop\n");
+
+          int q;
+          for(q=0; q<npipes*2; q++){
+            close(pipes[q]);
+            debug("pipe[%d] of %d closed\n", q, npipes*2);
           }
 
           // execute command
+          debug("about to exec %s, h=%d\n", cmd[h], h);
           char *args[MAXLINE];
           int count = 1;
-          args[0] = strtok(cmd[cc], " ");
+          args[0] = strtok(cmd[h], " ");
           debug("args[%d] = %s\n", 0, args[0]);
           while(args[count-1] != NULL){
             args[count] = strtok(NULL, " ");
@@ -178,9 +185,9 @@ int main()
           args[count-1] = NULL;
           debug("command about to execute: \"%s\"\n", args[0]);
           int proper_cmd = execvp(args[0], args);
-          if(proper_cmd<0) error(cmd[cc]);
+          if(proper_cmd<0) error(cmd[h]);
 
-          exit(1);
+          exit(0);
         }
         else if(pid < 0){
           perror("Fork failed");
@@ -191,7 +198,7 @@ int main()
         //wait(NULL);
       }
 
-      debug("closing all pipes after for loop\n");
+      debug("closing all pipes after loop\n");
       // close all pipes
       for(y=0; y<npipes*2; y++){
         close(pipes[y]);
