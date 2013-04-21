@@ -160,6 +160,7 @@ int main()
           }
 
           // close all pipes
+          debug("closing all pipes in loop\n");
           for(y=0; y<npipes*2; y++){
             close(pipes[y]);
           }
@@ -168,11 +169,15 @@ int main()
           char *args[MAXLINE];
           int count = 1;
           args[0] = strtok(cmd[cc], " ");
+          debug("args[%d] = %s\n", 0, args[0]);
           while(args[count-1] != NULL){
             args[count] = strtok(NULL, " ");
+            debug("args[%d] = %s\n", count, args[count]);
             count++;
           }
-          int proper_cmd = execvp(args[0], args); 
+          args[count-1] = NULL;
+          debug("command about to execute: \"%s\"\n", args[0]);
+          int proper_cmd = execvp(args[0], args);
           if(proper_cmd<0) error(cmd[cc]);
 
           exit(1);
@@ -181,10 +186,12 @@ int main()
           perror("Fork failed");
           exit(0);
         }
+        else{ wait(NULL); }
         cc++;
+        //wait(NULL);
       }
 
-
+      debug("closing all pipes after for loop\n");
       // close all pipes
       for(y=0; y<npipes*2; y++){
         close(pipes[y]);
