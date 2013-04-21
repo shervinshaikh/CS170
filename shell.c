@@ -45,6 +45,7 @@ void runCommand(char* command){
   else if(pid == 0){
     int proper_cmd = execvp(args[0], args); 
     if(proper_cmd<0) error(command); 
+    exit(1);
   }
   // parent process
   else{
@@ -119,10 +120,13 @@ int main()
           char *filename = strtok(cmd[ncmd], " ");
           FILE *outfile = fopen(filename, "w");
           // output from command gets placed into the file through piping
-          
+          int oldstdout = dup(1);
           dup2(fileno(outfile), 1);
           fclose(outfile);
           runCommand(cmd[ncmd-1]);
+          dup2(oldstdout,1);
+          close(oldstdout);
+          exit(1);
           //int proper_cmd = execvp(,); // this is just for 1 previous command
           //if(proper_cmd<0) error();
         }
@@ -130,6 +134,8 @@ int main()
           wait(NULL);
         }
       }
+
+      // file to stdin
     }
 
       // forking
