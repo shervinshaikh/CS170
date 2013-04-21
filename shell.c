@@ -149,7 +149,7 @@ int main()
               perror("Piping failed");
               exit(0);
             }
-            else{ debug("read pipe-0 for pipes[%d]\n", (h-1)*2); }
+            else{ debug("READ pipe-0 for pipes[%d]\n", (h-1)*2); }
           }
 
           // if not last command, WRITE-pipe
@@ -159,7 +159,7 @@ int main()
               perror("Piping failed");
               exit(0);
             }
-            else{ debug("write pipe-1 for pipes[%d]\n", h*2+1); }
+            else{ debug("WRITE pipe-1 for pipes[%d]\n", h*2+1); }
           }
 
           // close all pipes
@@ -182,10 +182,14 @@ int main()
             debug("args[%d] = %s\n", count, args[count]);
             count++;
           }
-          args[count-1] = NULL;
+          //args[count-1] = NULL;
           debug("command about to execute: \"%s\"\n", args[0]);
           int proper_cmd = execvp(args[0], args);
-          if(proper_cmd<0) error(cmd[h]);
+          debug("Executed... and proper_cmd: %d\n", proper_cmd);
+          if(proper_cmd<0){
+            printf("ERROR: %s: command not found\n", cmd[h]);
+            exit(1);
+          }
 
           exit(0);
         }
@@ -203,6 +207,11 @@ int main()
       for(y=0; y<npipes*2; y++){
         close(pipes[y]);
       }
+
+      // waits for children processes to finish
+      int status;
+      for (i = 0; i < npipes+1; i++)
+        wait(&status);
 
 
     //   // BEGINNING: if file-stdin or a pipe-write
