@@ -165,9 +165,17 @@ int main()
           }
 
           // execute command
-          runCommand(cmd[cc]);
+          char *args[MAXLINE];
+          int count = 1;
+          args[0] = strtok(cmd[cc], " ");
+          while(args[count-1] != NULL){
+            args[count] = strtok(NULL, " ");
+            count++;
+          }
+          int proper_cmd = execvp(args[0], args); 
+          if(proper_cmd<0) error(cmd[cc]);
 
-          exit(0);
+          exit(1);
         }
         else if(pid < 0){
           perror("Fork failed");
