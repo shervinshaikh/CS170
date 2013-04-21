@@ -61,7 +61,7 @@ int main()
   pid_t pid;
   //int mypipe[2];
 
-  while(1){    
+  while(1){
     printf("ssih:>");
     fgets(inputString, MAXLINE, stdin);
 
@@ -121,192 +121,250 @@ int main()
       // could set up a loop to handle it.  The differences are in the
       // indicies into pipes used for the dup2 system call
       // and that the 1st and last only deal with the end of one pipe.
-      int input = 0, output = 0;
+      //int input = 0, output = 0;
 
       // pipes[0] = read end
       // pipes[1] = write end
       int pipes[npipes*2];
       int h;
       // setting up pipes
-      for(h=0; h<=npipes; h++){
-        pipe(pipes + h*2);
-      }
-
-      // BEGINNING: if file-stdin or a pipe-write
-      // file to stdin
-      if(redirects[0] == '<'){
-        input = 1;
-        pid = fork();
-        if(pid == -1){
-          perror("Fork Failed");
+      for(h=0; h<npipes; h++){
+        if(pipe(pipes + h*2) < 0){
+          perror("Pipe creation failed");
           exit(0);
         }
-        else if(pid == 0){
-          char *filename = strtok(cmd[1], " ");
-          FILE *infile = fopen(filename, "r");
-          debug("input filename: %s \n", filename);
-          // input file replaces stdin
-          //int oldstdout = dup(0);
-          dup2(fileno(infile), 0);
+      }
 
-          if(npipes > 0){
-            // write end of pipe
-            dup2(pipes[1], 1);
+      int cc = 0, y=0;
+      // for loop iterating through pipes and redirects
+      for(h=0; h<=nredirects; h++){
+        pid = fork();
+        if(pid == 0){
 
-            //close all pipes
-            for(h=0; h<npipes*2; h++){
-              close(pipes[h]);
+          // if not first command, READ-pipe
+          if(h != 0){
+            if(dup2(pipes[(cc-1)*2], 0) < 0){
+              debug("read pipe");
+              perror("Piping failed");
+              exit(0);
             }
           }
 
-          fclose(infile);
-          runCommand(cmd[0]);
-          //dup2(oldstdout,0);
-          //close(oldstdout);
-          exit(1);
-        }
-        else{
-          wait(NULL);
-        }
-      }
-      // write end of pipe
-      else if(redirects[0] == '|'){
-        input = 0;
-        pid = fork();
-        if(pid == -1){
-          perror("Fork Failed");
-          exit(0);
-        }
-        else if(pid == 0){
-
-          // write end of pipe
-          dup2(pipes[1], 1);
-
-          //close all pipes
-          for(h=0; h<npipes*2; h++){
-            close(pipes[h]);
+          // if not last command, WRITE-pipe
+          if(h != nredirects){
+            if(dup2(pipes[cc*2+1], 1) < 0){
+              debug("write pipe");
+              perror("Piping failed");
+              exit(0);
+            }
           }
 
-          // run command
-          runCommand(cmd[0]);
+          // close all pipes
+          for(y=0; y<npipes*2; y++){
+            close(pipes[y]);
+          }
 
-          // exit child process when done
+          // execute command
+          runCommand(cmd[cc]);
+
           exit(0);
         }
-        else{
-          wait(NULL);
+        else if(pid < 0){
+          perror("Fork failed");
+          exit(0);
         }
+        cc++;
       }
+
+
+      // close all pipes
+      for(y=0; y<npipes*2; y++){
+        close(pipes[y]);
+      }
+
+
+    //   // BEGINNING: if file-stdin or a pipe-write
+    //   // file to stdin
+    //   if(redirects[0] == '<'){
+    //     input = 1;
+    //     pid = fork();
+    //     if(pid == -1){
+    //       perror("Fork Failed");
+    //       exit(0);
+    //     }
+    //     else if(pid == 0){
+    //       char *filename = strtok(cmd[1], " ");
+    //       FILE *infile = fopen(filename, "r");
+    //       debug("input filename: %s \n", filename);
+    //       // input file replaces stdin
+    //       //int oldstdout = dup(0);
+    //       dup2(fileno(infile), 0);
+
+    //       if(npipes > 0){
+    //         // write end of pipe
+    //         dup2(pipes[1], 1);
+
+    //         //close all pipes
+    //         for(h=0; h<npipes*2; h++){
+    //           close(pipes[h]);
+    //         }
+    //       }
+
+    //       fclose(infile);
+    //       runCommand(cmd[0]);
+    //       //dup2(oldstdout,0);
+    //       //close(oldstdout);
+    //       exit(1);
+    //     }
+    //     else{
+    //       wait(NULL);
+    //     }
+    //   }
+    //   // write end of pipe
+    //   else if(redirects[0] == '|'){
+    //     input = 0;
+    //     pid = fork();
+    //     if(pid == -1){
+    //       perror("Fork Failed");
+    //       exit(0);
+    //     }
+    //     else if(pid == 0){
+
+    //       // write end of pipe
+    //       dup2(pipes[1], 1);
+
+    //       //close all pipes
+    //       for(h=0; h<npipes*2; h++){
+    //         close(pipes[h]);
+    //       }
+
+    //       // run command
+    //       runCommand(cmd[0]);
+
+    //       // exit child process when done
+    //       exit(1);
+    //     }
+    //     else{
+
+
+    //       wait(NULL);
+    //     }
+    //   }
     
 
-      // MIDDLE: hits only if there are pipes in the middle
-      if(nredirects >= 3 && npipes >=1){
-        int npipesmid = nredirects-2;
-        // iterate through all the pipes in the middle (nredirects-2 = npipes in middle)
-        for(i=1; i<=npipesmid; i++){
+    //   // MIDDLE: hits only if there are pipes in the middle
+    //   if(nredirects >= 3 && npipes >=1){
+    //     int npipesmid = nredirects-2;
+    //     // iterate through all the pipes in the middle (nredirects-2 = npipes in middle)
+    //     for(i=1; i<=npipesmid; i++){
 
-          // forking new process
-          pid = fork();
-          if(pid == -1){
-            perror("Fork Failed");
-            exit(0);
-          }
-          // child process
-          else if(pid == 0){
+    //       // forking new process
+    //       pid = fork();
+    //       if(pid == -1){
+    //         perror("Fork Failed");
+    //         exit(0);
+    //       }
+    //       // child process
+    //       else if(pid == 0){
 
-            if(input){
-              // read end of pipe
-              dup2(pipes[i-1], 0);
-              // write end of pipe
-              dup2(pipes[i+1], 1);
-            }
+    //         if(input){
+    //           // read end of pipe
+    //           dup2(pipes[i-1], 0);
+    //           // write end of pipe
+    //           dup2(pipes[i+1], 1);
+    //         }
 
-            // closing all pipes
-            for(h=0; h<npipes*2; h++){
-              close(pipes[h]);
-            }
+    //         // closing all pipes
+    //         for(h=0; h<npipes*2; h++){
+    //           close(pipes[h]);
+    //         }
 
-            // executing command
-            runCommand(cmd[nredirects]);
+    //         // executing command
+    //         runCommand(cmd[nredirects]);
 
 
-            exit(1);
-          }
-          // parent process
-          else{
-            wait(NULL);
-          }
-        }
-      }
+    //         exit(1);
+    //       }
+    //       // parent process
+    //       else{
+    //         wait(NULL);
+    //       }
+    //     }
+    //   }
 
-      // END: outfile-stdout or pipe-read
-      // stdout to an outfile
-      if(redirects[nredirects-1] == '>'){
-        output = 1;
-        pid = fork();
-        if(pid == -1){
-          perror("Fork Failed");
-          exit(0);
-        }
-        else if(pid == 0){
-          char *filename = strtok(cmd[nredirects], " ");
-          FILE *outfile = fopen(filename, "w");
-          debug("output filename: %s \n", filename);
-          // output from command gets placed into the file through piping
-          int oldstdout = dup(1);
+    //   // END: outfile-stdout or pipe-read
+    //   // stdout to an outfile
+    //   if(redirects[nredirects-1] == '>'){
+    //     output = 1;
+    //     pid = fork();
+    //     if(pid == -1){
+    //       perror("Fork Failed");
+    //       exit(0);
+    //     }
+    //     else if(pid == 0){
+    //       char *filename = strtok(cmd[nredirects], " ");
+    //       FILE *outfile = fopen(filename, "w");
+    //       debug("output filename: %s \n", filename);
+    //       // output from command gets placed into the file through piping
+    //       int oldstdout = dup(1);
 
-          // file is the read end of the pipe
-          dup2(fileno(outfile), 1);
+    //       // file is the read end of the pipe
+    //       dup2(fileno(outfile), 1);
 
-          if(npipes > 0){
-            // write end of pipe
-            dup2(pipes[npipes*2-2], 0);
+    //       if(npipes > 0){
+    //         // write end of pipe
+    //         dup2(pipes[npipes*2-2], 0);
 
-            //close all pipes
-            for(h=0; h<npipes*2; h++){
-              close(pipes[h]);
-            }
-          }
+    //         //close all pipes
+    //         for(h=0; h<npipes*2; h++){
+    //           close(pipes[h]);
+    //         }
+    //       }
 
-          fclose(outfile);
-          runCommand(cmd[nredirects-1]);
-          dup2(oldstdout,1);
-          close(oldstdout);
-          exit(1);
-          //int proper_cmd = execvp(,); // this is just for 1 previous command
-          //if(proper_cmd<0) error();
-        }
-        else{
-          wait(NULL);
-        }
-      }
-      // read end of pipe
-      else if(redirects[nredirects-1] == '|'){
-        pid = fork();
-        if(pid == -1){
-          perror("Fork Failed");
-          exit(0);
-        }
-        else if(pid == 0){
+    //       fclose(outfile);
+    //       runCommand(cmd[nredirects-1]);
+    //       dup2(oldstdout,1);
+    //       close(oldstdout);
+    //       exit(1);
+    //       //int proper_cmd = execvp(,); // this is just for 1 previous command
+    //       //if(proper_cmd<0) error();
+    //     }
+    //     else{
+    //       wait(NULL);
+    //     }
+    //   }
+    //   // read end of pipe
+    //   else if(redirects[nredirects-1] == '|'){
+    //     pid = fork();
+    //     if(pid == -1){
+    //       perror("Fork Failed");
+    //       exit(0);
+    //     }
+    //     else if(pid == 0){
 
-          // read end of pipe
-          dup2(pipes[nredirects*2], 0);
+    //       // read end of pipe
+    //       dup2(pipes[nredirects*2], 0);
 
-          // closing all pipes
-          for(h=0; h<npipes*2; h++){
-            close(pipes[h]);
-          }
+    //       // closing all pipes
+    //       for(h=0; h<npipes*2; h++){
+    //         close(pipes[h]);
+    //       }
 
-          // run the command
-          runCommand(cmd[nredirects]);
+    //       // run the command
+    //       runCommand(cmd[nredirects]);
 
-          exit(1);
-        }
-        else{
-          wait(NULL);
-        }
-      }
-    }
+    //       exit(1);
+    //     }
+    //     else{
+    //       wait(NULL);
+    //     }
+    //   }
+    // }
+
+
+
+
+
 
       // forking
       
@@ -346,6 +404,7 @@ int main()
     //   // in the parent process
     // }
 
+    }
   }
   return 0;
 }
