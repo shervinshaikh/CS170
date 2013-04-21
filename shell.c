@@ -184,12 +184,11 @@ int main()
           }
           //args[count-1] = NULL;
           debug("command about to execute: \"%s\"\n", args[0]);
-          int proper_cmd = execvp(args[0], args);
-          debug("Executed... and proper_cmd: %d\n", proper_cmd);
-          if(proper_cmd<0){
+          if(execvp(args[0], args) < 0){
             printf("ERROR: %s: command not found\n", cmd[h]);
             exit(1);
           }
+          debug("Executed...\n");
 
           exit(0);
         }
@@ -197,7 +196,7 @@ int main()
           perror("Fork failed");
           exit(0);
         }
-        else{ wait(NULL); }
+        else{ wait(&pid); }
         cc++;
         //wait(NULL);
       }
