@@ -82,6 +82,7 @@ int main()
     if((!strcmp(inputString, "exit")) || feof(stdin)) exit(0);
 
     // place redirect characters into a char array
+    // TODO: count # of |
     char redirects[ncmd];
     int i, j;
     for(i=0, j=0; i<slen && j<ncmd; i++){
@@ -111,6 +112,11 @@ int main()
 
     // either pipelining or I/O redirection
     else{
+      // Note that the code in each if is basically identical, so you
+      // could set up a loop to handle it.  The differences are in the
+      // indicies into pipes used for the dup2 system call
+      // and that the 1st and last only deal with the end of one pipe.
+      
       // file to stdin
       if(redirects[0] == '<'){
         pid = fork();
@@ -123,12 +129,12 @@ int main()
           FILE *infile = fopen(filename, "r");
           debug("input filename: %s \n", filename);
           // input file replaces stdin
-          int oldstdout = dup(0);
+          //int oldstdout = dup(0);
           dup2(fileno(infile), 0);
           fclose(infile);
           runCommand(cmd[0]);
-          dup2(oldstdout,0);
-          close(oldstdout);
+          //dup2(oldstdout,0);
+          //close(oldstdout);
           exit(1);
         }
         else{
@@ -203,6 +209,5 @@ int main()
     // }
 
   }
-
   return 0;
 }

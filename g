@@ -1,1 +1,1 @@
-ERROR:  f: command not found
+       1       1       6 f
