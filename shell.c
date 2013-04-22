@@ -244,43 +244,43 @@ int main()
         wait(&status);
 
 
-    //   // BEGINNING: if file-stdin or a pipe-write
-    //   // file to stdin
-    //   if(redirects[0] == '<'){
-    //     input = 1;
-    //     pid = fork();
-    //     if(pid == -1){
-    //       perror("Fork Failed");
-    //       exit(0);
-    //     }
-    //     else if(pid == 0){
-    //       char *filename = strtok(cmd[1], " ");
-    //       FILE *infile = fopen(filename, "r");
-    //       debug("input filename: %s \n", filename);
-    //       // input file replaces stdin
-    //       //int oldstdout = dup(0);
-    //       dup2(fileno(infile), 0);
+      // BEGINNING: if file-stdin or a pipe-write
+      // file to stdin
+      if(redirects[0] == '<'){
+        input = 1;
+        pid = fork();
+        if(pid == -1){
+          perror("Fork Failed");
+          exit(0);
+        }
+        else if(pid == 0){
+          char *filename = strtok(cmd[1], " ");
+          FILE *infile = fopen(filename, "r");
+          debug("input filename: %s \n", filename);
+          // input file replaces stdin
+          //int oldstdout = dup(0);
+          dup2(fileno(infile), 0);
 
-    //       if(npipes > 0){
-    //         // write end of pipe
-    //         dup2(pipes[1], 1);
+          if(npipes > 0){
+            // write end of pipe
+            dup2(pipes[1], 1);
 
-    //         //close all pipes
-    //         for(h=0; h<npipes*2; h++){
-    //           close(pipes[h]);
-    //         }
-    //       }
+            //close all pipes
+            for(h=0; h<npipes*2; h++){
+              close(pipes[h]);
+            }
+          }
 
-    //       fclose(infile);
-    //       runCommand(cmd[0]);
-    //       //dup2(oldstdout,0);
-    //       //close(oldstdout);
-    //       exit(1);
-    //     }
-    //     else{
-    //       wait(NULL);
-    //     }
-    //   }
+          fclose(infile);
+          runCommand(cmd[0]);
+          //dup2(oldstdout,0);
+          //close(oldstdout);
+          exit(1);
+        }
+        else{
+          wait(NULL);
+        }
+      }
     //   // write end of pipe
     //   else if(redirects[0] == '|'){
     //     input = 0;
