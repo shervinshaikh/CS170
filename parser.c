@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 char*** parseString(char * inputstring);
 
 void main()
 {
-  char theString[] = "hello world      |     cat f > dog world | hat";
+  char theString[] = "hello world      |     cat f > dog world | hat me";
   parseString(theString);
 }
 
@@ -37,22 +38,28 @@ char ***parseString(char* inputString){
    }
 
 
+   //char **parsedArray[nredirects+1] = malloc(1000);
+
    char **parsedArray[nredirects+1];
+   char ***parsedArray2 = (char ***)malloc(1000*sizeof(char *));
 
    int j;
    char *args[1024];
    for(j=0;j<=nredirects;j++){
      int count = 1;
      args[0] = strtok(cmd[j], " ");
-     printf("args[first][j]: %s\n", args[0]);
+     printf("args[0]: %s\n", args[0]);
      while(args[count-1] != NULL){
        args[count] = strtok(NULL, " ");
-       printf("args[count][j]: %s\n", args[count]);
+       printf("args[%d]: %s\n",count, args[count]);
        count++;
      }
      parsedArray[j] = args;
+     // printf("first %s \n", **parsedArray+4);
      
    }
 
-   return parsedArray;
+   parsedArray2 = parsedArray;
+   return parsedArray2;
+   
 }
