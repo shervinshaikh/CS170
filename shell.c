@@ -171,6 +171,7 @@ int main()
             debug("pipe[%d] of %d closed\n", q, npipes*2);
           }
 
+
           // execute command
           debug("about to exec %s, h=%d\n", cmd[h], h);
           char *args[MAXLINE];
@@ -189,6 +190,12 @@ int main()
             exit(1);
           }
           debug("Executed...\n");
+
+          // testing execute command
+          if(cc == 0) execvp(*cat_args, cat_args);
+          else if(cc == 1) execvp(*grep_args, grep_args);
+          else if(cc == 2) execvp(*cut_args, cut_args);
+
 
           exit(0);
         }
