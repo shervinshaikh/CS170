@@ -55,6 +55,25 @@ void runCommand(char* command){
   }
 }
 
+int checkRedirects(int nredirects,int npipes, char redirects[]){
+   if(redirects[0] == '>' && nredirects > 1){
+      printf("ERROR: %c command not valid\n", redirects[0]);
+   }
+   if(redirects[nredirects -1] == '<' && nredirects > 1){
+      printf("ERROR: %c command not valid\n", redirects[0]);
+   }
+   if(nredirects>1){
+      int i = 1;
+      for(i=1;i<nredirects-1;i++){
+         if(redirects[i] != '|'){
+            printf("ERROR: %c command not valid\n", redirects[0]);
+         }  
+       }
+     } 
+   //int for returning if it was an error or not.
+   return 0;
+}
+
 int main()
 {
   char inputString[MAXLINE] = {0};
