@@ -9,6 +9,7 @@ Project 1
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 #define MAXLINE 1024
@@ -145,7 +146,7 @@ int main()
       // could set up a loop to handle it.  The differences are in the
       // indicies into pipes used for the dup2 system call
       // and that the 1st and last only deal with the end of one pipe.
-      //int input = 0, output = 0;
+      int input = 0, output = 0;
 
       // pipes[0] = read end
       // pipes[1] = write end
@@ -169,7 +170,7 @@ int main()
           // if not first command, READ-pipe
           if(h != 0){
             if(dup2(pipes[(h-1)*2], 0) < 0){
-              debug("read pipe");
+              debug("read pipe - ");
               perror("Piping failed");
               exit(0);
             }
@@ -179,7 +180,7 @@ int main()
           // if not last command, WRITE-pipe
           if(h != nredirects){
             if(dup2(pipes[h*2+1], 1) < 0){
-              debug("write pipe");
+              debug("write pipe - ");
               perror("Piping failed");
               exit(0);
             }
@@ -367,7 +368,7 @@ int main()
           FILE *outfile = fopen(filename, "w");
           debug("output filename: %s \n", filename);
           // output from command gets placed into the file through piping
-          int oldstdout = dup(1);
+          //int oldstdout = dup(1);
 
           // file is the read end of the pipe
           dup2(fileno(outfile), 1);
@@ -384,8 +385,8 @@ int main()
 
           fclose(outfile);
           runCommand(cmd[nredirects-1]);
-          dup2(oldstdout,1);
-          close(oldstdout);
+          //dup2(oldstdout,1);
+          //close(oldstdout);
           exit(1);
           //int proper_cmd = execvp(,); // this is just for 1 previous command
           //if(proper_cmd<0) error();
@@ -420,49 +421,6 @@ int main()
     //       wait(NULL);
     //     }
     //   }
-    // }
-
-
-
-
-
-
-      // forking
-      
-        // char out = *args[2];
-        // printf("%c\n", out);
-        // if(out == '>'){
-        //   *args[2] = "\0";
-        //   out = 'k';
-        //   printf("setting out value to \'k\'\n it is: %c \n", out);
-        //   FILE *outfile = fopen(args[3], "w");
-        //   fprintf(outfile, "%s\n", args[1]);
-        //   fclose(outfile);
-        //   dup2(fileno(outfile), 1);
-        //   exit(1);
-        // }
-        // else{
-
-
-        
-    //}
-
-    
-    
-    // printf("current working directory is: %s\n", directory);
-
-    // forking stuff
-    // pid = fork();
-    // if(pid == 0){
-    //   // in the child process
-    //   //char cmd[20]={"/bin/ls"};
-    //   char cmd[20]={"ls"};
-    //   
-    //   char *args[]={"/","-l", (char*)0 };
-    //   execvp(inputString, args);
-    // }
-    // else{
-    //   // in the parent process
     // }
 
     }
