@@ -353,47 +353,47 @@ int main()
     //     }
     //   }
 
-    //   // END: outfile-stdout or pipe-read
-    //   // stdout to an outfile
-    //   if(redirects[nredirects-1] == '>'){
-    //     output = 1;
-    //     pid = fork();
-    //     if(pid == -1){
-    //       perror("Fork Failed");
-    //       exit(0);
-    //     }
-    //     else if(pid == 0){
-    //       char *filename = strtok(cmd[nredirects], " ");
-    //       FILE *outfile = fopen(filename, "w");
-    //       debug("output filename: %s \n", filename);
-    //       // output from command gets placed into the file through piping
-    //       int oldstdout = dup(1);
+      // END: outfile-stdout or pipe-read
+      // stdout to an outfile
+      if(redirects[nredirects-1] == '>'){
+        output = 1;
+        pid = fork();
+        if(pid == -1){
+          perror("Fork Failed");
+          exit(0);
+        }
+        else if(pid == 0){
+          char *filename = strtok(cmd[nredirects], " ");
+          FILE *outfile = fopen(filename, "w");
+          debug("output filename: %s \n", filename);
+          // output from command gets placed into the file through piping
+          int oldstdout = dup(1);
 
-    //       // file is the read end of the pipe
-    //       dup2(fileno(outfile), 1);
+          // file is the read end of the pipe
+          dup2(fileno(outfile), 1);
 
-    //       if(npipes > 0){
-    //         // write end of pipe
-    //         dup2(pipes[npipes*2-2], 0);
+          if(npipes > 0){
+            // write end of pipe
+            dup2(pipes[npipes*2-2], 0);
 
-    //         //close all pipes
-    //         for(h=0; h<npipes*2; h++){
-    //           close(pipes[h]);
-    //         }
-    //       }
+            //close all pipes
+            for(h=0; h<npipes*2; h++){
+              close(pipes[h]);
+            }
+          }
 
-    //       fclose(outfile);
-    //       runCommand(cmd[nredirects-1]);
-    //       dup2(oldstdout,1);
-    //       close(oldstdout);
-    //       exit(1);
-    //       //int proper_cmd = execvp(,); // this is just for 1 previous command
-    //       //if(proper_cmd<0) error();
-    //     }
-    //     else{
-    //       wait(NULL);
-    //     }
-    //   }
+          fclose(outfile);
+          runCommand(cmd[nredirects-1]);
+          dup2(oldstdout,1);
+          close(oldstdout);
+          exit(1);
+          //int proper_cmd = execvp(,); // this is just for 1 previous command
+          //if(proper_cmd<0) error();
+        }
+        else{
+          wait(NULL);
+        }
+      }
     //   // read end of pipe
     //   else if(redirects[nredirects-1] == '|'){
     //     pid = fork();
