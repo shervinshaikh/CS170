@@ -55,6 +55,24 @@ void runCommand(char* command){
   }
 }
 
+int checkRedirects(int nredirects,int npipes, char redirects[]){
+   if(redirects[0] == '>' && nredirects > 1){
+      printf("ERROR: %c command not valid\n", redirects[0]);
+   }
+   if(redirects[nredirects -1] == '<' && nredirects > 1){
+      printf("ERROR: %c command not valid\n", redirects[0]);
+   }
+   if(nredirects>1){
+      int i = 1;
+      for(i=1;i<nredirects-1;i++){
+         if(redirects[i] != '|'){
+            printf("ERROR: %c command not valid\n", redirects[0]);
+         }  
+       }
+     } 
+   return 0;
+}
+
 int main()
 {
   char inputString[MAXLINE] = {0};
@@ -109,6 +127,11 @@ int main()
       i++;
     }
     debug("Number of redirects: %d\n", nredirects);
+   
+    //call method to check redirects
+    if(nredirects > 0 && npipes != nredirects){
+       checkRedirects(nredirects,npipes,redirects);
+    }
     // TODO: fix cd to actually move you around
     // TODO: revmoe extra stuff because its only 1 command that needs to be runmd;
     if(nredirects == 0){
