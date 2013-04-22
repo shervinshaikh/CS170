@@ -70,6 +70,7 @@ int checkRedirects(int nredirects,int npipes, char redirects[]){
          }  
        }
      } 
+   //int for returning if it was an error or not.
    return 0;
 }
 
