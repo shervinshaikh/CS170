@@ -26,10 +26,10 @@ int main(int argc, char **argv)
   char *cat_args[] = {"cat", "scores", NULL};
   char *grep_args[] = {"grep", "shervin", NULL};
   char *cut_args[] = {"wc", NULL};//{"cut", "-b", "1-10", NULL};
-  char *cmd[npipes+1];
-  cmd[0] = "cat scores";
-  cmd[1] = "grep shervin";
-  cmd[2] = "wc";
+  char **cmd[] = {cat_args, grep_args, cut_args};
+  // cmd[0] = "cat scores";
+  // cmd[1] = "grep shervin";
+  // cmd[2] = "wc";
 
   // make 2 pipes (cat to grep and grep to cut); each has 2 fds
 
@@ -65,21 +65,22 @@ int main(int argc, char **argv)
       for (i = 0; i < npipes*2; i++){
         close(pipes[i]);
       }
-      printf("command counter: %d\n", cc);
+      // printf("command counter: %d\n", cc);
 
-      char *args[1024];
-      int count = 1;
-      args[0] = strtok(cmd[cc], " ");
-      printf("args[%d] = %s\n", 0, args[0]);
-      while(args[count-1] != NULL){
-        args[count] = strtok(NULL, " ");
-        printf("args[%d] = %s\n", count, args[count]);
-        count++;
-      }
-      execvp(*args, args);
+      // char *args[1024];
+      // int count = 1;
+      // args[0] = strtok(cmd[cc], " ");
+      // printf("args[%d] = %s\n", 0, args[0]);
+      // while(args[count-1] != NULL){
+      //   args[count] = strtok(NULL, " ");
+      //   printf("args[%d] = %s\n", count, args[count]);
+      //   count++;
+      // }
+      // execvp(*args, args);
       // if(cc == 0) execvp(*cat_args, cat_args);
       // else if(cc == 1) execvp(*grep_args, grep_args);
       // else if(cc == 2) execvp(*cut_args, cut_args);
+      execvp(*cmd[cc], cmd[cc]);
     }
   }
   

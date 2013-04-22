@@ -59,6 +59,11 @@ int main()
 {
   char inputString[MAXLINE] = {0};
   pid_t pid;
+
+
+  char *cat_args[] = {"cat", "scores", NULL};
+  char *grep_args[] = {"grep", "shervin", NULL};
+  char *cut_args[] = {"wc", NULL};
   //int mypipe[2];
 
   while(1){
@@ -173,23 +178,23 @@ int main()
 
 
           // execute command
-          debug("about to exec %s, h=%d\n", cmd[h], h);
-          char *args[MAXLINE];
-          int count = 1;
-          args[0] = strtok(cmd[h], " ");
-          debug("args[%d] = %s\n", 0, args[0]);
-          while(args[count-1] != NULL){
-            args[count] = strtok(NULL, " ");
-            debug("args[%d] = %s\n", count, args[count]);
-            count++;
-          }
-          //args[count-1] = NULL;
-          debug("command about to execute: \"%s\"\n", args[0]);
-          if(execvp(args[0], args) < 0){
-            printf("ERROR: %s: command not found\n", cmd[h]);
-            exit(1);
-          }
-          debug("Executed...\n");
+          // debug("about to exec %s, h=%d\n", cmd[h], h);
+          // char *args[MAXLINE];
+          // int count = 1;
+          // args[0] = strtok(cmd[h], " ");
+          // debug("args[%d] = %s\n", 0, args[0]);
+          // while(args[count-1] != NULL){
+          //   args[count] = strtok(NULL, " ");
+          //   debug("args[%d] = %s\n", count, args[count]);
+          //   count++;
+          // }
+          // //args[count-1] = NULL;
+          // debug("command about to execute: \"%s\"\n", args[0]);
+          // if(execvp(args[0], args) < 0){
+          //   printf("ERROR: %s: command not found\n", cmd[h]);
+          //   exit(1);
+          // }
+          // debug("Executed...\n");
 
           // testing execute command
           if(cc == 0) execvp(*cat_args, cat_args);
