@@ -18,16 +18,16 @@ int main(int argc, char **argv)
   int status;
   int e, u, commandCounter = 0;
 
-  int npipes = 1, nredirects = 1;
+  int npipes = 1, nredirects = 2;
   //int npipes = 0, nredirects = 1;
 
   char *cat_args[] = {"cat", "f", NULL};
   char *grep_args[] = {"grep", "shervin", NULL};
   char *cut_args[] = {"g", NULL};
-  char **command[] = {cat_args, grep_args};
+  char **command[] = {cat_args, grep_args, cut_args};
   //char **command[] = {cat_args, cut_args};
 
-  char redirects[] = {'|'};
+  char redirects[] = {'|', '>'};
   //char redirects[] = {'>'};
 
   // char *cat_args[] = {"cat", "scores", NULL};
@@ -46,21 +46,21 @@ int main(int argc, char **argv)
     if(fork() == 0){
       // if not the beginning,  READ-end of pipe
       if(commandCounter !=0){
-        //if(npipes>0){
+        if(npipes>0){
           dup2(pipes[(commandCounter-1)*2], 0);
-        //}
+        }
       }
 
       // if end & outfile - WRITE
-      // if((commandCounter+1) == nredirects && redirects[nredirects-1] == '>'){
-      //   char* filename = *command[nredirects];
-      //   FILE *outfile = fopen(filename, "w");
-      //   debug("output filename: %s \n", filename);
-      //   dup2(fileno(outfile), 1);
-      //   debug("command: %s \n", *command[commandCounter]);
-      //   fclose(outfile);
-      //   execvp(*command[commandCounter], command[commandCounter]);
-      // }
+      if((commandCounter+1) == nredirects && redirects[nredirects-1] == '>'){
+        char* filename = *command[nredirects];
+        FILE *outfile = fopen(filename, "w");
+        debug("output filename: %s \n", filename);
+        dup2(fileno(outfile), 1);
+        debug("command: %s \n", *command[commandCounter]);
+        fclose(outfile);
+        execvp(*command[commandCounter], command[commandCounter]);
+      }
 
       // if not the end,  WRITE-end of pipe
       if(commandCounter != nredirects){
@@ -71,14 +71,13 @@ int main(int argc, char **argv)
         //   dup2(fileno(infile),0);
         //   fclose(infile);
         // }
-        //if(npipes > 0){
+        if(npipes > 0){
           dup2(pipes[commandCounter*2+1], 1);
-        //}
+        }
       }
 
       // close pipes
       for (e=0; e<npipes*2; e++){ close(pipes[e]); }
-      
       
       execvp(*command[commandCounter], command[commandCounter]);
       exit(1);

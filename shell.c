@@ -228,7 +228,7 @@ int main()
           perror("Fork failed");
           exit(0);
         }
-        else{ wait(&pid); }
+        //else{ wait(&pid); }
         cc++;
         //wait(NULL);
       }
