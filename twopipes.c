@@ -83,7 +83,7 @@ int main(int argc, char **argv)
       execvp(*command[commandCounter], command[commandCounter]);
       exit(1);
     }
-    else wait(NULL);
+    //else wait(NULL);
   }
   
  
