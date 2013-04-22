@@ -9,6 +9,7 @@ Project 1
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 #define MAXLINE 1024
@@ -145,7 +146,7 @@ int main()
       // could set up a loop to handle it.  The differences are in the
       // indicies into pipes used for the dup2 system call
       // and that the 1st and last only deal with the end of one pipe.
-      //int input = 0, output = 0;
+      int input = 0, output = 0;
 
       // pipes[0] = read end
       // pipes[1] = write end
@@ -169,7 +170,7 @@ int main()
           // if not first command, READ-pipe
           if(h != 0){
             if(dup2(pipes[(h-1)*2], 0) < 0){
-              debug("read pipe");
+              debug("read pipe - ");
               perror("Piping failed");
               exit(0);
             }
@@ -179,7 +180,7 @@ int main()
           // if not last command, WRITE-pipe
           if(h != nredirects){
             if(dup2(pipes[h*2+1], 1) < 0){
-              debug("write pipe");
+              debug("write pipe - ");
               perror("Piping failed");
               exit(0);
             }
@@ -227,7 +228,7 @@ int main()
           perror("Fork failed");
           exit(0);
         }
-        else{ wait(&pid); }
+        //else{ wait(&pid); }
         cc++;
         //wait(NULL);
       }
@@ -244,43 +245,43 @@ int main()
         wait(&status);
 
 
-    //   // BEGINNING: if file-stdin or a pipe-write
-    //   // file to stdin
-    //   if(redirects[0] == '<'){
-    //     input = 1;
-    //     pid = fork();
-    //     if(pid == -1){
-    //       perror("Fork Failed");
-    //       exit(0);
-    //     }
-    //     else if(pid == 0){
-    //       char *filename = strtok(cmd[1], " ");
-    //       FILE *infile = fopen(filename, "r");
-    //       debug("input filename: %s \n", filename);
-    //       // input file replaces stdin
-    //       //int oldstdout = dup(0);
-    //       dup2(fileno(infile), 0);
+      // BEGINNING: if file-stdin or a pipe-write
+      // file to stdin
+      if(redirects[0] == '<'){
+        input = 1;
+        pid = fork();
+        if(pid == -1){
+          perror("Fork Failed");
+          exit(0);
+        }
+        else if(pid == 0){
+          char *filename = strtok(cmd[1], " ");
+          FILE *infile = fopen(filename, "r");
+          debug("input filename: %s \n", filename);
+          // input file replaces stdin
+          //int oldstdout = dup(0);
+          dup2(fileno(infile), 0);
 
-    //       if(npipes > 0){
-    //         // write end of pipe
-    //         dup2(pipes[1], 1);
+          if(npipes > 0){
+            // write end of pipe
+            dup2(pipes[1], 1);
 
-    //         //close all pipes
-    //         for(h=0; h<npipes*2; h++){
-    //           close(pipes[h]);
-    //         }
-    //       }
+            //close all pipes
+            for(h=0; h<npipes*2; h++){
+              close(pipes[h]);
+            }
+          }
 
-    //       fclose(infile);
-    //       runCommand(cmd[0]);
-    //       //dup2(oldstdout,0);
-    //       //close(oldstdout);
-    //       exit(1);
-    //     }
-    //     else{
-    //       wait(NULL);
-    //     }
-    //   }
+          fclose(infile);
+          runCommand(cmd[0]);
+          //dup2(oldstdout,0);
+          //close(oldstdout);
+          exit(1);
+        }
+        else{
+          wait(NULL);
+        }
+      }
     //   // write end of pipe
     //   else if(redirects[0] == '|'){
     //     input = 0;
@@ -353,47 +354,47 @@ int main()
     //     }
     //   }
 
-    //   // END: outfile-stdout or pipe-read
-    //   // stdout to an outfile
-    //   if(redirects[nredirects-1] == '>'){
-    //     output = 1;
-    //     pid = fork();
-    //     if(pid == -1){
-    //       perror("Fork Failed");
-    //       exit(0);
-    //     }
-    //     else if(pid == 0){
-    //       char *filename = strtok(cmd[nredirects], " ");
-    //       FILE *outfile = fopen(filename, "w");
-    //       debug("output filename: %s \n", filename);
-    //       // output from command gets placed into the file through piping
-    //       int oldstdout = dup(1);
+      // END: outfile-stdout or pipe-read
+      // stdout to an outfile
+      if(redirects[nredirects-1] == '>'){
+        output = 1;
+        pid = fork();
+        if(pid == -1){
+          perror("Fork Failed");
+          exit(0);
+        }
+        else if(pid == 0){
+          char *filename = strtok(cmd[nredirects], " ");
+          FILE *outfile = fopen(filename, "w");
+          debug("output filename: %s \n", filename);
+          // output from command gets placed into the file through piping
+          //int oldstdout = dup(1);
 
-    //       // file is the read end of the pipe
-    //       dup2(fileno(outfile), 1);
+          // file is the read end of the pipe
+          dup2(fileno(outfile), 1);
 
-    //       if(npipes > 0){
-    //         // write end of pipe
-    //         dup2(pipes[npipes*2-2], 0);
+          if(npipes > 0){
+            // write end of pipe
+            dup2(pipes[npipes*2-2], 0);
 
-    //         //close all pipes
-    //         for(h=0; h<npipes*2; h++){
-    //           close(pipes[h]);
-    //         }
-    //       }
+            //close all pipes
+            for(h=0; h<npipes*2; h++){
+              close(pipes[h]);
+            }
+          }
 
-    //       fclose(outfile);
-    //       runCommand(cmd[nredirects-1]);
-    //       dup2(oldstdout,1);
-    //       close(oldstdout);
-    //       exit(1);
-    //       //int proper_cmd = execvp(,); // this is just for 1 previous command
-    //       //if(proper_cmd<0) error();
-    //     }
-    //     else{
-    //       wait(NULL);
-    //     }
-    //   }
+          fclose(outfile);
+          runCommand(cmd[nredirects-1]);
+          //dup2(oldstdout,1);
+          //close(oldstdout);
+          exit(1);
+          //int proper_cmd = execvp(,); // this is just for 1 previous command
+          //if(proper_cmd<0) error();
+        }
+        else{
+          wait(NULL);
+        }
+      }
     //   // read end of pipe
     //   else if(redirects[nredirects-1] == '|'){
     //     pid = fork();
@@ -420,49 +421,6 @@ int main()
     //       wait(NULL);
     //     }
     //   }
-    // }
-
-
-
-
-
-
-      // forking
-      
-        // char out = *args[2];
-        // printf("%c\n", out);
-        // if(out == '>'){
-        //   *args[2] = "\0";
-        //   out = 'k';
-        //   printf("setting out value to \'k\'\n it is: %c \n", out);
-        //   FILE *outfile = fopen(args[3], "w");
-        //   fprintf(outfile, "%s\n", args[1]);
-        //   fclose(outfile);
-        //   dup2(fileno(outfile), 1);
-        //   exit(1);
-        // }
-        // else{
-
-
-        
-    //}
-
-    
-    
-    // printf("current working directory is: %s\n", directory);
-
-    // forking stuff
-    // pid = fork();
-    // if(pid == 0){
-    //   // in the child process
-    //   //char cmd[20]={"/bin/ls"};
-    //   char cmd[20]={"ls"};
-    //   
-    //   char *args[]={"/","-l", (char*)0 };
-    //   execvp(inputString, args);
-    // }
-    // else{
-    //   // in the parent process
     // }
 
     }
