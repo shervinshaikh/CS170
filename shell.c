@@ -14,7 +14,7 @@ Project 1
 
 #define MAXLINE 1024
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
     #define    debug(f,...)    fprintf(stderr,f,##__VA_ARGS__)
 #else
