@@ -46,20 +46,22 @@ int main(int argc, char **argv)
     if(fork() == 0){
       // if not the beginning,  READ-end of pipe
       if(commandCounter !=0){
-        if(npipes>0){
+        //if(npipes>0){
           dup2(pipes[(commandCounter-1)*2], 0);
-        }
+        //}
       }
 
-      // if end & outfile - WRITE
+      // if right before end & outfile - WRITE
       if((commandCounter+1) == nredirects && redirects[nredirects-1] == '>'){
         char* filename = *command[nredirects];
         FILE *outfile = fopen(filename, "w");
         debug("output filename: %s \n", filename);
         dup2(fileno(outfile), 1);
-        debug("command: %s \n", *command[commandCounter]);
         fclose(outfile);
+        for (e=0; e<npipes*2; e++){ close(pipes[e]); }
+        debug("about to execute command: %s \n", *command[commandCounter]);
         execvp(*command[commandCounter], command[commandCounter]);
+        exit(0);
       }
 
       // if not the end,  WRITE-end of pipe
@@ -79,18 +81,19 @@ int main(int argc, char **argv)
       // close pipes
       for (e=0; e<npipes*2; e++){ close(pipes[e]); }
       
+      debug("about to execute command: %s\n", *command[commandCounter]);
       execvp(*command[commandCounter], command[commandCounter]);
       exit(1);
     }
-    //else wait(NULL);
+    //else wait(&status);
   }
   
- 
-  // parent waits for all children to finish
-  for(e=0; e<npipes*2; e++){
-    close(pipes[e]);
-  }
+  // close all pipes
+  for(e=0; e<npipes*2; e++){ close(pipes[e]); }
 
-  for(e=0; e<nredirects+1; e++)
+  // parent waits for all children to finish
+  for(e=0; e<nredirects; e++){
     wait(&status);
+    debug("status: %d completed\n", status);
+  }
 }
