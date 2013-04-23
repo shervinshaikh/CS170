@@ -18,18 +18,18 @@ int main(int argc, char **argv)
   int status;
   int e, u, commandCounter = 0;
 
-  int npipes = 1, nredirects = 2;
-  //int npipes = 1, nredirects = 3;
+  //int npipes = 1, nredirects = 2;
+  int npipes = 1, nredirects = 3;
 
-  char *cat_args[] = {"cat", "f", NULL};
+  char *cat_args[] = {"cat", NULL};
   char *grep_args[] = {"grep", "shervin", NULL};
-  char *cut_args[] = {"wc", NULL};
+  char *cut_args[] = {"f", NULL};
   char *two[] = {"hello", NULL};
-  char **command[] = {cat_args, grep_args, two};
+  char **command[] = {cat_args, cut_args, grep_args, two};
   //char **command[] = {cat_args, cut_args, grep_args, two};
 
-  char redirects[] = {'|', '>'};
-  //char redirects[] = {'<', '|', '>'};
+  //char redirects[] = {'|', '>'};
+  char redirects[] = {'<', '|', '>'};
 
   // char *cat_args[] = {"cat", "scores", NULL};
   // char *grep_args[] = {"grep", "shervin", NULL};
@@ -78,8 +78,14 @@ int main(int argc, char **argv)
 
       // if not the beginning,  READ-end of pipe
       if(commandCounter !=0 && npipes>0){
+        if(output == 1 && commandCounter == nredirects){
+          break;          
+        }
+        else{
           debug("read pipe for %s<-%s\n", *command[commandCounter], *command[commandCounter-1 - input]);
           dup2(pipes[(commandCounter-1)*2 - input*2], 0);
+        }
+
       }
 
       // if right before end & outfile exists - WRITE
@@ -102,7 +108,7 @@ int main(int argc, char **argv)
 
       // if not the end,  WRITE-end of pipe
       if(commandCounter != nredirects && npipes>0){
-        if(!(input == 1 && commandCounter < 2 || output == 1)){
+        if(!(input == 1 && commandCounter < 2) || output == 1){
           debug("write pipe for %s->%s\n", *command[commandCounter], *command[commandCounter+1]);
           dup2(pipes[commandCounter*2+1 - input*2], 1);
         }
