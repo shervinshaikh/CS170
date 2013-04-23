@@ -156,8 +156,8 @@ int main()
       // child process
       else if(pid == 0){
         debug("changing the DIRECTORY: %s\n", "HOME");
-        chdir(getenv("HOME")); 
-        perror("chdir was unsucessful \n");
+        int work = chdir(getenv("HOME")); 
+        if(work == -1) perror("chdir was unsucessful \n");
         exit(1);
       }
       // parent process
