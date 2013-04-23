@@ -77,14 +77,8 @@ int main(int argc, char **argv)
 
       // if not the beginning,  READ-end of pipe
       if(commandCounter !=0 && npipes>0){
-        // if(output == 1){
-        //   // debug("read pipe for %s<-%s\n", *command[commandCounter], *command[commandCounter-2]);
-        //   // dup2(pipes[(commandCounter-1)*2 - input*2], 0);
-        // }
-        // else{
           debug("read pipe for %s<-%s\n", *command[commandCounter], *command[commandCounter-1 - input]);
           dup2(pipes[(commandCounter-1)*2 - input*2], 0);
-        //}
       }
 
       // if right before end & outfile exists - WRITE
@@ -103,10 +97,7 @@ int main(int argc, char **argv)
 
       // if not the end,  WRITE-end of pipe
       if(commandCounter != nredirects && npipes>0){
-        if(input == 1 && commandCounter < 2 || output == 1){
-
-        }
-        else{
+        if(!(input == 1 && commandCounter < 2 || output == 1){}
           debug("write pipe for %s->%s\n", *command[commandCounter], *command[commandCounter+1]);
           dup2(pipes[commandCounter*2+1 - input*2], 1);
         }
