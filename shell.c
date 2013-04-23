@@ -43,9 +43,32 @@ void runCommand(char* command){
 
   // change directory
   if(strcmp(args[0], "cd") == 0){
+    int work;
+    //debug("changing DIRECTORY: %s\n", args[1]);
+    if(args[1] == NULL){
+      debug("going home\n");
+      work = chdir(getenv("HOME"));
+      if(work == -1) perror("ERROR: chdir was unsucessful \n");
+      return;
+    }
+    if(args[1][0] == '~'){
+      debug("going home\n");
+      work = chdir(getenv("HOME"));
+      args[1]++;
+      if(args[1][0] == '/'){
+        debug("changing DIRECTORY: %s\n", args[1]++);
+        const char *path = args[1];
+        work = chdir(path); 
+        if(work == -1) perror("ERROR: chdir was unsucessful \n");
+        return;
+      }
+      else{
+        return;
+      }
+    }
     debug("changing DIRECTORY: %s\n", args[1]);
     const char *path = args[1];
-    int work = chdir(path); 
+    work = chdir(path); 
     if(work == -1) perror("chdir was unsucessful \n");
     return;
   }
