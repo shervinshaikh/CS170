@@ -200,6 +200,11 @@ int main()
           
           if(fork() == 0){
             debug("entering FOR loop, commandCounter: %d\n", commandCounter);
+
+            // exit if its a file name, we dont want to execute them as commands
+            if(input == 1 && commandCounter == 1){ exit(0);}
+            if(commandCounter == nredirects && output == 1){ exit(0); }
+
             // if beginning & infile - READ
             if(commandCounter == 0 && input == 1){
               char *filename = *command[1];
@@ -208,25 +213,26 @@ int main()
               dup2(fileno(infile),0);
               if(npipes > 0){
                 dup2(pipes[1], 1);
-                debug("write pipe for %s->%s\n", *command[commandCounter], *command[commandCounter+2]);
+                debug("in-write pipe for %s->%s\n", *command[commandCounter], *command[commandCounter+2]);
               }
               // close everything
               fclose(infile);
               for(e=0; e<npipes*2; e++){ close(pipes[e]); }
-              commandCounter = 2;
-              debug("INFILE execute command: %s, #%d\n", *command[commandCounter-2], commandCounter-2);
-              execvp(*command[commandCounter-2], command[commandCounter-2]);
+              //commandCounter = 2;
+              debug("INFILE execute command: %s, #%d\n", *command[commandCounter], commandCounter);
+              execvp(*command[commandCounter], command[commandCounter]);
               exit(0);
             }
 
             // if not the beginning,  READ-end of pipe
             if(commandCounter !=0 && npipes>0){
-              if(output == 1 && commandCounter == nredirects){
-                break;          
+              if(commandCounter == 2 && input == 1){
+                debug("read pipe for %s<-%s\n", *command[commandCounter], *command[commandCounter-2]); // - input
+                dup2(pipes[(commandCounter-1)*2 -2], 0);
               }
               else{
-                debug("read pipe for %s<-%s\n", *command[commandCounter], *command[commandCounter-1 - input]);
-                dup2(pipes[(commandCounter-1)*2 - input*2], 0);
+                debug("read pipe for %s<-%s\n", *command[commandCounter], *command[commandCounter-1]); // - input
+                dup2(pipes[(commandCounter-1)*2], 0); // - input*2
               }
 
             }
@@ -239,8 +245,8 @@ int main()
               dup2(fileno(outfile), 1);
               fclose(outfile);
               if(npipes > 0){
-                dup2(pipes[0], 0);
-                debug("read pipe for %s<-%s\n", *command[commandCounter], *command[commandCounter-1-input]);
+                dup2(pipes[npipes*2-2], 0);
+                debug("out-read pipe for %s<-%s\n", *command[commandCounter], *command[commandCounter-1]);
               }
               for (e=0; e<npipes*2; e++){ close(pipes[e]); }
               debug("OUTFILE execute command: %s \n", *command[commandCounter]);
