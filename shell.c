@@ -1,3 +1,9 @@
+// TODO
+// -rf when removing gives seg fault
+// does it save a folder(mkdir) when you exit shell?
+// & background function when it is at the end of the line
+// maybe some more parsing stuff for other controls
+
 /*
 Shervin Shaikh & Ramon Rovirosa
 CS 170
