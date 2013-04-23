@@ -40,6 +40,16 @@ void runCommand(char* command){
     debug("SINGLE COMMAND/ARGS: %s\n", args[count]);
     count++;
   }
+
+  // change directory
+  if(strcmp(args[0], "cd") == 0){
+    debug("changing DIRECTORY: %s\n", args[1]);
+    const char *path = args[1];
+    int work = chdir(path); 
+    if(work == -1) perror("chdir was unsucessful \n");
+    return;
+  }
+
   // forking
   pid = fork();
   if (pid == -1){
@@ -48,14 +58,8 @@ void runCommand(char* command){
   }
   // child process
   else if(pid == 0){
-    if(strcmp(args[0], "cd") == 0){
-      int work = chdir(".."); 
-      if(work == -1) perror("chdir was unsucessful \n");
-    }
-    else{
-      int proper_cmd = execvp(args[0], args); 
-      if(proper_cmd<0) error(command);
-    } 
+    int proper_cmd = execvp(args[0], args); 
+    if(proper_cmd<0) error(command);
     exit(1);
   }
   // parent process
@@ -88,6 +92,7 @@ int main()
   char inputString[MAXLINE] = {0};
   //pid_t pid;
   int inc = 0;
+  //int amp = 0;
 
   // char *cat_args[] = {"cat", "scores", NULL};
   // char *grep_args[] = {"grep", "shervin", NULL};
