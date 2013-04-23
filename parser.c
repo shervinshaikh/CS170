@@ -2,20 +2,26 @@
 #include <string.h>
 #include <stdlib.h>
 
-char*** parseString(char * inputstring);
 
-void parseString2(){
-  char inputString[1024] = "hello world      |     cat f > dog world | hat me";
+void main()
+{
+  //char inputString[1024] = "hello world      |     cat f > dog world | hat me";
   
+  char inputString[1024]= {0};
+  fgets(inputString, 1024, stdin);
+
   //find how many redirect commands there are
   int slen = strlen(inputString), nredirects = 0, npipes = 0;
   int i;
+  char redirects[1024];
   for(i=0; i<strlen(inputString);i++){
      if(inputString[i] == '<' || inputString[i] == '>'){
+       redirects[nredirects] = inputString[i];
        nredirects++;
      }
      else if(inputString[i] == '|'){
        npipes++;
+       redirects[nredirects] = inputString[i];
        nredirects++;
      }
    }
@@ -55,18 +61,7 @@ void parseString2(){
    for(k=0;k<=nredirects;k++){
      command[k] = args[k]; 
    }
-   printf("command[k]: %s \n", command[1][0]);
-
-
-   
-}
-
-void main()
-{
-  char theString[] = "hello world      |     cat f > dog world | hat me";
-  //char ***FinalStrings = parseString(theString);
-  //printf("FinalStrings:  %s \n", **FinalStrings);
-  parseString2();
+   // printf("command[k]: %s \n", command[1][0]);
 }
 
 
