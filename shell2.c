@@ -18,18 +18,18 @@ int main(int argc, char **argv)
   int status;
   int e, u, commandCounter = 0;
 
-  //int npipes = 2, nredirects = 2;
-  int npipes = 1, nredirects = 3;
+  int npipes = 2, nredirects = 2;
+  //int npipes = 1, nredirects = 3;
 
-  char *cat_args[] = {"cat", NULL};
+  char *cat_args[] = {"cat", "f", NULL};
   char *grep_args[] = {"grep", "shervin", NULL};
-  char *cut_args[] = {"f", NULL};
+  char *cut_args[] = {"wc", NULL};
   char *two[] = {"hello", NULL};
-  //char **command[] = {cat_args, grep_args, cut_args};
-  char **command[] = {cat_args, cut_args, grep_args, two};
+  char **command[] = {cat_args, grep_args, cut_args};
+  //char **command[] = {cat_args, cut_args, grep_args, two};
 
-  //char redirects[] = {'|', '|'};
-  char redirects[] = {'<', '|', '>'};
+  char redirects[] = {'|', '|'};
+  //char redirects[] = {'<', '|', '>'};
 
   // char *cat_args[] = {"cat", "scores", NULL};
   // char *grep_args[] = {"grep", "shervin", NULL};
@@ -48,6 +48,9 @@ int main(int argc, char **argv)
   int input = 0, output = 0;
   if(redirects[0] == '<') input = 1;
   if(redirects[nredirects-1] == '>') output = 1;
+
+  debug("INPUT: %d, OUTPUT: %d\n", input, output);
+  debug("Npipes: %d, Nredirects: %d", npipes, nredirects);
 
   // loop to run all of the executions
   for(; commandCounter <= nredirects; commandCounter++){
