@@ -50,14 +50,14 @@ int main(int argc, char **argv)
   if(redirects[nredirects-1] == '>') output = 1;
 
   debug("INPUT: %d, OUTPUT: %d\n", input, output);
-  debug("Npipes: %d, Nredirects: %d", npipes, nredirects);
+  debug("Npipes: %d, Nredirects: %d\n", npipes, nredirects);
 
   // loop to run all of the executions
   for(; commandCounter <= nredirects; commandCounter++){
     debug("entering FOR loop, commandCounter: %d\n", commandCounter);
     if(fork() == 0){
       // if beginning & infile - READ
-      if(commandCounter == 0 && redirects[0] == '<'){
+      if(commandCounter == 0 && input == 1){
         char *filename = *command[1];
         FILE *infile = fopen(filename, "r");
         debug("input filename: %s\n", filename);
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
       }
 
       // if right before end & outfile exists - WRITE
-      if((commandCounter+1) == nredirects && redirects[nredirects-1] == '>'){
+      if((commandCounter+1) == nredirects && output == 1){
         char* filename = *command[nredirects];
         FILE *outfile = fopen(filename, "w");
         debug("output filename: %s \n", filename);
