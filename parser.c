@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 
-void main()
+int main()
 {
   //char inputString[1024] = "hello world      |     cat f > dog world | hat me";
   
@@ -12,56 +12,58 @@ void main()
 
   //find how many redirect commands there are
   int slen = strlen(inputString), nredirects = 0, npipes = 0;
-  int i;
+  int inc;
   char redirects[1024];
-  for(i=0; i<strlen(inputString);i++){
-     if(inputString[i] == '<' || inputString[i] == '>'){
-       redirects[nredirects] = inputString[i];
+  for(inc=0; inc<strlen(inputString);inc++){
+     if(inputString[inc] == '<' || inputString[inc] == '>'){
+       redirects[nredirects] = inputString[inc];
        nredirects++;
      }
-     else if(inputString[i] == '|'){
+     else if(inputString[inc] == '|'){
        npipes++;
-       redirects[nredirects] = inputString[i];
+       redirects[nredirects] = inputString[inc];
        nredirects++;
      }
    }
 
   // place each command into a string array
    char *cmd[nredirects+1];
-   i = 1;
+   inc = 1;
    cmd[0] = strtok(inputString, "<|>");
    // printf("Command 1 is: %s \n", cmd[0]);
-   while(i <= nredirects){
-     //for(i = 0; i <= nredirects; i++){  
-     cmd[i] = strtok(NULL, "<|>");
-     //printf("Command %d is: %s \n", i+1, cmd[i]);
-     i++;
+   while(inc <= nredirects){
+     //for(inc = 0; inc <= nredirects; inc++){  
+     cmd[inc] = strtok(NULL, "<|>");
+     //printf("Command %d is: %s \n", inc+1, cmd[inc]);
+     inc++;
    }
 
-   int j;
+
+
+   // NEW CODE starts here?
    char *args[nredirects+1][1024];
-   for(j=0;j<=nredirects;j++){
-     int count = 1;
-     args[j][0] = strtok(cmd[j], " ");
+   for(inc=0;inc<=nredirects;inc++){
+     int dascount = 1;
+     args[inc][0] = strtok(cmd[inc], " ");
      //printf("args[0]: %s\n", args[0]);
-     while(args[j][count-1] != NULL){
-       args[j][count] = strtok(NULL, " ");
-       //printf("args[%d]: %s\n",count, args[count]);
-       count++;
+     while(args[inc][dascount-1] != NULL){
+       args[inc][dascount] = strtok(NULL, " ");
+       //printf("args[%d]: %s\n",dascount, args[dascount]);
+       dascount++;
      }
-     //parsedArray[j] = args;
-     // printf("first %s \n", args[j]);
+     //parsedArray[inc] = args;
+     // printf("first %s \n", args[inc]);
    }
 
    //printf("first %s \n", args[2][0]);
 
    char **command[nredirects+1];
    //commands = {args[0],args[1],args[2],args[3]};
-   int k;
-   for(k=0;k<=nredirects;k++){
-     command[k] = args[k]; 
+   for(inc=0;inc<=nredirects;inc++){
+     command[inc] = args[inc]; 
    }
-   // printf("command[k]: %s \n", command[1][0]);
+   // printf("command[inc]: %s \n", command[1][0]);
+   return 0;
 }
 
 

@@ -15,8 +15,7 @@
 
 int main(int argc, char **argv)
 {
-  int status;
-  int e, u, commandCounter = 0;
+  
 
   //int npipes = 1, nredirects = 2;
   int npipes = 1, nredirects = 3;
@@ -36,6 +35,9 @@ int main(int argc, char **argv)
   // char *cut_args[] = {"wc", NULL};//{"cut", "-b", "1-10", NULL};
   // char **command[] = {cat_args, grep_args, cut_args};
 
+
+  int status;
+  int e, u, commandCounter = 0;
   // setting up pipes
   int pipes[npipes*2];
   for(u=0; u<npipes; u++){

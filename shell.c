@@ -78,12 +78,12 @@ int checkRedirects(int nredirects,int npipes, char redirects[]){
 int main()
 {
   char inputString[MAXLINE] = {0};
-  pid_t pid;
+  //pid_t pid;
+  int inc = 0;
 
-
-  char *cat_args[] = {"cat", "scores", NULL};
-  char *grep_args[] = {"grep", "shervin", NULL};
-  char *cut_args[] = {"wc", NULL};
+  // char *cat_args[] = {"cat", "scores", NULL};
+  // char *grep_args[] = {"grep", "shervin", NULL};
+  // char *cut_args[] = {"wc", NULL};
   //int mypipe[2];
 
   while(1){
@@ -146,283 +146,138 @@ int main()
       // could set up a loop to handle it.  The differences are in the
       // indicies into pipes used for the dup2 system call
       // and that the 1st and last only deal with the end of one pipe.
-      int input = 0, output = 0;
+
+      //BEGIN parser.c code
+       char *args[nredirects+1][1024];
+       for(inc=0;inc<=nredirects;inc++){
+         int dascount = 1;
+         args[inc][0] = strtok(cmd[inc], " ");
+         //printf("args[0]: %s\n", args[0]);
+         while(args[inc][dascount-1] != NULL){
+           args[inc][dascount] = strtok(NULL, " ");
+           //printf("args[%d]: %s\n",dascount, args[dascount]);
+           dascount++;
+         }
+         //parsedArray[inc] = args;
+         // printf("first %s \n", args[inc]);
+       }
+
+       //printf("first %s \n", args[2][0]);
+
+       char **command[nredirects+1];
+       //commands = {args[0],args[1],args[2],args[3]};
+       for(inc=0;inc<=nredirects;inc++){
+         command[inc] = args[inc]; 
+       }
+
+       // END parser.c code
 
       // pipes[0] = read end
       // pipes[1] = write end
-      int pipes[npipes*2];
-      int h = 0, u;
-      // setting up pipes
-      for(u=0; u<npipes; u++){
-        if(pipe(pipes + u*2) < 0){
-          perror("Pipe creation failed");
-          exit(0);
-        }
-        else{ debug("initializing pipe(pipes+%d)\n", u*2); }
-      }
+      
 
-      int cc = 0, y=0;
-      // for loop iterating through pipes and redirects
-      for(h=0; h<=nredirects; h++){
-        pid = fork();
-        if(pid == 0){
-          //debug("about to exec %s, cc=%d\n", cmd[cc], cc);
-          // if not first command, READ-pipe
-          if(h != 0){
-            if(dup2(pipes[(h-1)*2], 0) < 0){
-              debug("read pipe - ");
-              perror("Piping failed");
+      // BEGIN shell2.c code
+       int status;
+        int e, u, commandCounter = 0;
+        // setting up pipes
+        int pipes[npipes*2];
+        for(u=0; u<npipes; u++){
+          pipe(pipes + u*2);
+        }
+        commandCounter=0;
+
+        // fork, dup, close, exec, wait
+
+        int input = 0, output = 0;
+        if(redirects[0] == '<') input = 1;
+        if(redirects[nredirects-1] == '>') output = 1;
+
+        debug("INPUT: %d, OUTPUT: %d\n", input, output);
+        debug("Npipes: %d, Nredirects: %d\n", npipes, nredirects);
+
+        // loop to run all of the executions
+        for(; commandCounter <= nredirects; commandCounter++){
+          
+          if(fork() == 0){
+            debug("entering FOR loop, commandCounter: %d\n", commandCounter);
+            // if beginning & infile - READ
+            if(commandCounter == 0 && input == 1){
+              char *filename = *command[1];
+              FILE *infile = fopen(filename, "r");
+              debug("INPUT filename: %s\n", filename);
+              dup2(fileno(infile),0);
+              if(npipes > 0){
+                dup2(pipes[1], 1);
+                debug("write pipe for %s->%s\n", *command[commandCounter], *command[commandCounter+2]);
+              }
+              // close everything
+              fclose(infile);
+              for(e=0; e<npipes*2; e++){ close(pipes[e]); }
+              commandCounter = 2;
+              debug("INFILE execute command: %s, #%d\n", *command[commandCounter-2], commandCounter-2);
+              execvp(*command[commandCounter-2], command[commandCounter-2]);
               exit(0);
             }
-            else{ debug("READ pipe-0 for pipes[%d]\n", (h-1)*2); }
-          }
 
-          // if not last command, WRITE-pipe
-          if(h != nredirects){
-            if(dup2(pipes[h*2+1], 1) < 0){
-              debug("write pipe - ");
-              perror("Piping failed");
+            // if not the beginning,  READ-end of pipe
+            if(commandCounter !=0 && npipes>0){
+              if(output == 1 && commandCounter == nredirects){
+                break;          
+              }
+              else{
+                debug("read pipe for %s<-%s\n", *command[commandCounter], *command[commandCounter-1 - input]);
+                dup2(pipes[(commandCounter-1)*2 - input*2], 0);
+              }
+
+            }
+
+            // if right before end & outfile exists - WRITE
+            if((commandCounter+1) == nredirects && output == 1){
+              char* filename = *command[nredirects];
+              FILE *outfile = fopen(filename, "w");
+              debug("OUTPUT filename: %s \n", filename);
+              dup2(fileno(outfile), 1);
+              fclose(outfile);
+              if(npipes > 0){
+                dup2(pipes[0], 0);
+                debug("read pipe for %s<-%s\n", *command[commandCounter], *command[commandCounter-1-input]);
+              }
+              for (e=0; e<npipes*2; e++){ close(pipes[e]); }
+              debug("OUTFILE execute command: %s \n", *command[commandCounter]);
+              commandCounter++;
+              execvp(*command[commandCounter-1], command[commandCounter-1]);
               exit(0);
             }
-            else{ debug("WRITE pipe-1 for pipes[%d]\n", h*2+1); }
-          }
 
-          // close all pipes
-          //debug("closing all pipes in loop\n");
-
-          int q;
-          for(q=0; q<npipes*2; q++){
-            close(pipes[q]);
-            debug("pipe[%d] of %d closed\n", q, npipes*2);
-          }
-
-
-          // execute command
-          // debug("about to exec %s, h=%d\n", cmd[h], h);
-          // char *args[MAXLINE];
-          // int count = 1;
-          // args[0] = strtok(cmd[h], " ");
-          // debug("args[%d] = %s\n", 0, args[0]);
-          // while(args[count-1] != NULL){
-          //   args[count] = strtok(NULL, " ");
-          //   debug("args[%d] = %s\n", count, args[count]);
-          //   count++;
-          // }
-          // //args[count-1] = NULL;
-          // debug("command about to execute: \"%s\"\n", args[0]);
-          // if(execvp(args[0], args) < 0){
-          //   printf("ERROR: %s: command not found\n", cmd[h]);
-          //   exit(1);
-          // }
-          // debug("Executed...\n");
-
-          // testing execute command
-          if(cc == 0) execvp(*cat_args, cat_args);
-          else if(cc == 1) execvp(*grep_args, grep_args);
-          else if(cc == 2) execvp(*cut_args, cut_args);
-
-
-          exit(0);
-        }
-        else if(pid < 0){
-          perror("Fork failed");
-          exit(0);
-        }
-        //else{ wait(&pid); }
-        cc++;
-        //wait(NULL);
-      }
-
-      debug("closing all pipes after loop\n");
-      // close all pipes
-      for(y=0; y<npipes*2; y++){
-        close(pipes[y]);
-      }
-
-      // waits for children processes to finish
-      int status;
-      for (i = 0; i < npipes+1; i++)
-        wait(&status);
-
-
-      // BEGINNING: if file-stdin or a pipe-write
-      // file to stdin
-      if(redirects[0] == '<'){
-        input = 1;
-        pid = fork();
-        if(pid == -1){
-          perror("Fork Failed");
-          exit(0);
-        }
-        else if(pid == 0){
-          char *filename = strtok(cmd[1], " ");
-          FILE *infile = fopen(filename, "r");
-          debug("input filename: %s \n", filename);
-          // input file replaces stdin
-          //int oldstdout = dup(0);
-          dup2(fileno(infile), 0);
-
-          if(npipes > 0){
-            // write end of pipe
-            dup2(pipes[1], 1);
-
-            //close all pipes
-            for(h=0; h<npipes*2; h++){
-              close(pipes[h]);
+            // if not the end,  WRITE-end of pipe
+            if(commandCounter != nredirects && npipes>0){
+              if(!(input == 1 && commandCounter < 2) || output == 1){
+                debug("write pipe for %s->%s\n", *command[commandCounter], *command[commandCounter+1]);
+                dup2(pipes[commandCounter*2+1 - input*2], 1);
+              }
             }
+
+            // close pipes
+            for (e=0; e<npipes*2; e++){ close(pipes[e]); }
+            
+            debug("about to execute command: %s\n", *command[commandCounter]);
+            execvp(*command[commandCounter], command[commandCounter]);
+            debug("ERROR: Command %s not found\n", *command[commandCounter]);
+            exit(1);
           }
-
-          fclose(infile);
-          runCommand(cmd[0]);
-          //dup2(oldstdout,0);
-          //close(oldstdout);
-          exit(1);
+          //else wait(&status);
         }
-        else{
-          wait(NULL);
+        
+        // close all pipes
+        for(e=0; e<npipes*2; e++){ close(pipes[e]); }
+
+        // parent waits for all children to finish
+        for(e=0; e<nredirects+1; e++){
+          wait(&status);
+          debug("status: %d completed\n", status);
         }
-      }
-    //   // write end of pipe
-    //   else if(redirects[0] == '|'){
-    //     input = 0;
-    //     pid = fork();
-    //     if(pid == -1){
-    //       perror("Fork Failed");
-    //       exit(0);
-    //     }
-    //     else if(pid == 0){
 
-    //       // write end of pipe
-    //       dup2(pipes[1], 1);
-
-    //       //close all pipes
-    //       for(h=0; h<npipes*2; h++){
-    //         close(pipes[h]);
-    //       }
-
-    //       // run command
-    //       runCommand(cmd[0]);
-
-    //       // exit child process when done
-    //       exit(1);
-    //     }
-    //     else{
-
-
-    //       wait(NULL);
-    //     }
-    //   }
-    
-
-    //   // MIDDLE: hits only if there are pipes in the middle
-    //   if(nredirects >= 3 && npipes >=1){
-    //     int npipesmid = nredirects-2;
-    //     // iterate through all the pipes in the middle (nredirects-2 = npipes in middle)
-    //     for(i=1; i<=npipesmid; i++){
-
-    //       // forking new process
-    //       pid = fork();
-    //       if(pid == -1){
-    //         perror("Fork Failed");
-    //         exit(0);
-    //       }
-    //       // child process
-    //       else if(pid == 0){
-
-    //         if(input){
-    //           // read end of pipe
-    //           dup2(pipes[i-1], 0);
-    //           // write end of pipe
-    //           dup2(pipes[i+1], 1);
-    //         }
-
-    //         // closing all pipes
-    //         for(h=0; h<npipes*2; h++){
-    //           close(pipes[h]);
-    //         }
-
-    //         // executing command
-    //         runCommand(cmd[nredirects]);
-
-
-    //         exit(1);
-    //       }
-    //       // parent process
-    //       else{
-    //         wait(NULL);
-    //       }
-    //     }
-    //   }
-
-      // END: outfile-stdout or pipe-read
-      // stdout to an outfile
-      if(redirects[nredirects-1] == '>'){
-        output = 1;
-        pid = fork();
-        if(pid == -1){
-          perror("Fork Failed");
-          exit(0);
-        }
-        else if(pid == 0){
-          char *filename = strtok(cmd[nredirects], " ");
-          FILE *outfile = fopen(filename, "w");
-          debug("output filename: %s \n", filename);
-          // output from command gets placed into the file through piping
-          //int oldstdout = dup(1);
-
-          // file is the read end of the pipe
-          dup2(fileno(outfile), 1);
-
-          if(npipes > 0){
-            // write end of pipe
-            dup2(pipes[npipes*2-2], 0);
-
-            //close all pipes
-            for(h=0; h<npipes*2; h++){
-              close(pipes[h]);
-            }
-          }
-
-          fclose(outfile);
-          runCommand(cmd[nredirects-1]);
-          //dup2(oldstdout,1);
-          //close(oldstdout);
-          exit(1);
-          //int proper_cmd = execvp(,); // this is just for 1 previous command
-          //if(proper_cmd<0) error();
-        }
-        else{
-          wait(NULL);
-        }
-      }
-    //   // read end of pipe
-    //   else if(redirects[nredirects-1] == '|'){
-    //     pid = fork();
-    //     if(pid == -1){
-    //       perror("Fork Failed");
-    //       exit(0);
-    //     }
-    //     else if(pid == 0){
-
-    //       // read end of pipe
-    //       dup2(pipes[nredirects*2], 0);
-
-    //       // closing all pipes
-    //       for(h=0; h<npipes*2; h++){
-    //         close(pipes[h]);
-    //       }
-
-    //       // run the command
-    //       runCommand(cmd[nredirects]);
-
-    //       exit(1);
-    //     }
-    //     else{
-    //       wait(NULL);
-    //     }
-    //   }
-    // }
-
+      // END shell2.c code
     }
   }
   return 0;
