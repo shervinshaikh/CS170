@@ -18,17 +18,17 @@ int main(int argc, char **argv)
   int status;
   int e, u, commandCounter = 0;
 
-  int npipes = 2, nredirects = 2;
+  int npipes = 1, nredirects = 2;
   //int npipes = 1, nredirects = 3;
 
   char *cat_args[] = {"cat", "f", NULL};
   char *grep_args[] = {"grep", "shervin", NULL};
   char *cut_args[] = {"wc", NULL};
   char *two[] = {"hello", NULL};
-  char **command[] = {cat_args, grep_args, cut_args};
+  char **command[] = {cat_args, grep_args, two};
   //char **command[] = {cat_args, cut_args, grep_args, two};
 
-  char redirects[] = {'|', '|'};
+  char redirects[] = {'|', '>'};
   //char redirects[] = {'<', '|', '>'};
 
   // char *cat_args[] = {"cat", "scores", NULL};
@@ -54,13 +54,14 @@ int main(int argc, char **argv)
 
   // loop to run all of the executions
   for(; commandCounter <= nredirects; commandCounter++){
-    debug("entering FOR loop, commandCounter: %d\n", commandCounter);
+    
     if(fork() == 0){
+      debug("entering FOR loop, commandCounter: %d\n", commandCounter);
       // if beginning & infile - READ
       if(commandCounter == 0 && input == 1){
         char *filename = *command[1];
         FILE *infile = fopen(filename, "r");
-        debug("input filename: %s\n", filename);
+        debug("INPUT filename: %s\n", filename);
         dup2(fileno(infile),0);
         if(npipes > 0){
           dup2(pipes[1], 1);
@@ -85,9 +86,13 @@ int main(int argc, char **argv)
       if((commandCounter+1) == nredirects && output == 1){
         char* filename = *command[nredirects];
         FILE *outfile = fopen(filename, "w");
-        debug("output filename: %s \n", filename);
+        debug("OUTPUT filename: %s \n", filename);
         dup2(fileno(outfile), 1);
         fclose(outfile);
+        if(npipes > 0){
+          dup2(pipes[0], 0);
+          debug("read pipe for %s<-%s\n", *command[commandCounter], *command[commandCounter-1-input]);
+        }
         for (e=0; e<npipes*2; e++){ close(pipes[e]); }
         debug("OUTFILE execute command: %s \n", *command[commandCounter]);
         commandCounter++;
@@ -97,7 +102,7 @@ int main(int argc, char **argv)
 
       // if not the end,  WRITE-end of pipe
       if(commandCounter != nredirects && npipes>0){
-        if(!(input == 1 && commandCounter < 2 || output == 1){}
+        if(!(input == 1 && commandCounter < 2 || output == 1)){
           debug("write pipe for %s->%s\n", *command[commandCounter], *command[commandCounter+1]);
           dup2(pipes[commandCounter*2+1 - input*2], 1);
         }
