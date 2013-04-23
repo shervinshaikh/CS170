@@ -78,7 +78,7 @@ int checkRedirects(int nredirects,int npipes, char redirects[]){
 int main()
 {
   char inputString[MAXLINE] = {0};
-  //pid_t pid;
+  pid_t pid;
   int inc = 0;
 
   // char *cat_args[] = {"cat", "scores", NULL};
@@ -136,7 +136,37 @@ int main()
     debug("Number of redirects: %d\n", nredirects);
     // TODO: fix cd to actually move you around
     // TODO: revmoe extra stuff because its only 1 command that needs to be runmd;
-    if(nredirects == 0){
+
+
+    // if its a "cd" command
+    if(cmd[0][0] == 'c' && cmd[0][1] == 'd'){
+      char *args[MAXLINE];
+      int count = 1;
+      args[0] = strtok(cmd[0], " ");
+      while(args[count-1] != NULL){
+        args[count] = strtok(NULL, " ");
+        count++;
+      }
+      // forking
+      pid = fork();
+      if (pid == -1){
+        perror("Fork failed");
+        exit(0);
+      }
+      // child process
+      else if(pid == 0){
+        debug("changing the DIRECTORY: %s\n", "..");
+        chdir(".."); 
+        perror("chdir was unsucessful \n");
+        exit(1);
+      }
+      // parent process
+      else{
+        wait(NULL);
+      }
+    }
+
+    else if(nredirects == 0){
       runCommand(inputString);
     }
 
