@@ -23,5 +23,7 @@ int main()
     //printf("This will print in myfile\n"); 
     execvp(*args, args);
  
+    //a cat
+
     return 0;
 }
