@@ -34,8 +34,10 @@ void runCommand(char* command){
   pid_t pid;
   int count = 1;
   args[0] = strtok(command, " ");
+  debug("SINGLE COMMAND/ARGS: %s\n", args[0]);
   while(args[count-1] != NULL){
     args[count] = strtok(NULL, " ");
+    debug("SINGLE COMMAND/ARGS: %s\n", args[count]);
     count++;
   }
   // forking
@@ -46,8 +48,14 @@ void runCommand(char* command){
   }
   // child process
   else if(pid == 0){
-    int proper_cmd = execvp(args[0], args); 
-    if(proper_cmd<0) error(command); 
+    if(strcmp(args[0], "cd") == 0){
+      int work = chdir(".."); 
+      if(work == -1) perror("chdir was unsucessful \n");
+    }
+    else{
+      int proper_cmd = execvp(args[0], args); 
+      if(proper_cmd<0) error(command);
+    } 
     exit(1);
   }
   // parent process
@@ -78,7 +86,7 @@ int checkRedirects(int nredirects,int npipes, char redirects[]){
 int main()
 {
   char inputString[MAXLINE] = {0};
-  pid_t pid;
+  //pid_t pid;
   int inc = 0;
 
   // char *cat_args[] = {"cat", "scores", NULL};
@@ -139,34 +147,34 @@ int main()
 
 
     // if its a "cd" command
-    if(cmd[0][0] == 'c' && cmd[0][1] == 'd'){
-      char *args[MAXLINE];
-      int count = 1;
-      args[0] = strtok(cmd[0], " ");
-      while(args[count-1] != NULL){
-        args[count] = strtok(NULL, " ");
-        count++;
-      }
-      // forking
-      pid = fork();
-      if (pid == -1){
-        perror("Fork failed");
-        exit(0);
-      }
-      // child process
-      else if(pid == 0){
-        debug("changing the DIRECTORY: %s\n", "HOME");
-        int work = chdir(getenv("HOME")); 
-        if(work == -1) perror("chdir was unsucessful \n");
-        exit(1);
-      }
-      // parent process
-      else{
-        wait(NULL);
-      }
-    }
+    // if(cmd[0][0] == 'c' && cmd[0][1] == 'd'){
+    //   char *args[MAXLINE];
+    //   int count = 1;
+    //   args[0] = strtok(cmd[0], " ");
+    //   while(args[count-1] != NULL){
+    //     args[count] = strtok(NULL, " ");
+    //     count++;
+    //   }
+    //   // forking
+    //   pid = fork();
+    //   if (pid == -1){
+    //     perror("Fork failed");
+    //     exit(0);
+    //   }
+    //   // child process
+    //   else if(pid == 0){
+    //     debug("changing the DIRECTORY: %s\n", "..");
+    //     int work = chdir(".."); 
+    //     if(work == -1) perror("chdir was unsucessful \n");
+    //     exit(1);
+    //   }
+    //   // parent process
+    //   else{
+    //     wait(NULL);
+    //   }
+    // }
 
-    else if(nredirects == 0){
+    if(nredirects == 0){
       runCommand(inputString);
     }
 
