@@ -46,9 +46,9 @@ int main(int argc, char **argv)
     if(fork() == 0){
       // if not the beginning,  READ-end of pipe
       if(commandCounter !=0){
-        //if(npipes>0){
+        if(npipes>0){
           dup2(pipes[(commandCounter-1)*2], 0);
-        //}
+        }
       }
 
       // if right before end & outfile - WRITE
