@@ -67,7 +67,7 @@ int main(int argc, char **argv)
         dup2(fileno(infile),0);
         if(npipes > 0){
           dup2(pipes[1], 1);
-          debug("write pipe for %s->%s\n", *command[commandCounter], *command[commandCounter+2]);
+          debug("in-write pipe for %s->%s\n", *command[commandCounter], *command[commandCounter+2]);
         }
         // close everything
         fclose(infile);
@@ -84,8 +84,8 @@ int main(int argc, char **argv)
           break;          
         }
         else{
-          debug("read pipe for %s<-%s\n", *command[commandCounter], *command[commandCounter-1 - input]);
-          dup2(pipes[(commandCounter-1)*2 - input*2], 0);
+          debug("read pipe for %s<-%s\n", *command[commandCounter], *command[commandCounter-1]);
+          dup2(pipes[(commandCounter-1)*2], 0); // -input*2
         }
 
       }
@@ -98,8 +98,8 @@ int main(int argc, char **argv)
         dup2(fileno(outfile), 1);
         fclose(outfile);
         if(npipes > 0){
-          dup2(pipes[0], 0);
-          debug("read pipe for %s<-%s\n", *command[commandCounter], *command[commandCounter-1-input]);
+          dup2(pipes[npipes-1], 0);
+          debug("out-read pipe for %s<-%s\n", *command[commandCounter], *command[commandCounter-1]);
         }
         for (e=0; e<npipes*2; e++){ close(pipes[e]); }
         debug("OUTFILE execute command: %s \n", *command[commandCounter]);
