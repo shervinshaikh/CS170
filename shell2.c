@@ -77,14 +77,14 @@ int main(int argc, char **argv)
 
       // if not the beginning,  READ-end of pipe
       if(commandCounter !=0 && npipes>0){
-        if(output == 0){
-          // debug("read pipe for %s<-%s\n", *command[commandCounter], *command[commandCounter-2]);
-          // dup2(pipes[(commandCounter-1)*2 - input*2], 0);
-        }
-        else{
+        // if(output == 1){
+        //   // debug("read pipe for %s<-%s\n", *command[commandCounter], *command[commandCounter-2]);
+        //   // dup2(pipes[(commandCounter-1)*2 - input*2], 0);
+        // }
+        // else{
           debug("read pipe for %s<-%s\n", *command[commandCounter], *command[commandCounter-1 - input]);
           dup2(pipes[(commandCounter-1)*2 - input*2], 0);
-        }
+        //}
       }
 
       // if right before end & outfile exists - WRITE
@@ -96,7 +96,8 @@ int main(int argc, char **argv)
         fclose(outfile);
         for (e=0; e<npipes*2; e++){ close(pipes[e]); }
         debug("OUTFILE execute command: %s \n", *command[commandCounter]);
-        execvp(*command[commandCounter], command[commandCounter]);
+        commandCounter++;
+        execvp(*command[commandCounter-1], command[commandCounter-1]);
         exit(0);
       }
 
