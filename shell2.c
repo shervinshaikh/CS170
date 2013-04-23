@@ -18,16 +18,16 @@ int main(int argc, char **argv)
   int status;
   int e, u, commandCounter = 0;
 
-  int npipes = 1, nredirects = 2;
+  int npipes = 2, nredirects = 2;
   //int npipes = 0, nredirects = 1;
 
   char *cat_args[] = {"cat", "f", NULL};
   char *grep_args[] = {"grep", "shervin", NULL};
-  char *cut_args[] = {"g", NULL};
+  char *cut_args[] = {"wc", NULL};
   char **command[] = {cat_args, grep_args, cut_args};
   //char **command[] = {cat_args, cut_args};
 
-  char redirects[] = {'|', '>'};
+  char redirects[] = {'|', '|'};
   //char redirects[] = {'>'};
 
   // char *cat_args[] = {"cat", "scores", NULL};
