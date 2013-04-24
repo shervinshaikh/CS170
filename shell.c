@@ -129,7 +129,8 @@ int main()
   //int mypipe[2];
 
   while(1){
-    printf("ssih:>");
+    if(isatty(fileno(stdin)) == 1)
+      printf("ssih:>");
     fgets(inputString, MAXLINE, stdin);
 
     int slen = 0, nredirects = 0, npipes = 0;
