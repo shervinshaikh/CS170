@@ -35,7 +35,7 @@ void error(char inputString[]){
 
 
 // TODO: handle quotes as one arguement & don't break whitespaces
-void runCommand(char* command){
+void runCommand(char* command, int ampersand){
   char *args[MAXLINE];
   pid_t pid;
   int count = 1;
@@ -93,11 +93,12 @@ void runCommand(char* command){
   }
   // parent process
   else{
-    wait(NULL);
+    if(ampersand == 0)
+       wait(NULL);
   }
 }
 
-int checkRedirects(int nredirects,int npipes, char redirects[]){
+int checkRedirects(int nredirects,int npipes, char redirects[], int ampersands){
    if(redirects[0] == '>' && nredirects > 1){
       printf("ERROR: %c command not valid\n", redirects[0]);
    }
@@ -133,7 +134,7 @@ int main()
       printf("ssih:>");
     fgets(inputString, MAXLINE, stdin);
 
-    int slen = 0, nredirects = 0, npipes = 0;
+    int slen = 0, nredirects = 0, npipes = 0, ampersand = 0;
     while(inputString[slen] != '\n'){
       if(inputString[slen] == '<' || inputString [slen] == '>'){
         nredirects++;
@@ -142,13 +143,22 @@ int main()
         npipes++;
         nredirects++;
       }
+      else if(inputString[slen] == '&'){
+        ampersand=1;
+        //inputString[slen] = '\0';
+      }
       slen++;
     }
     debug("Number of commands: %d \n", nredirects+1);
     debug("Number of pipes: %d \n", npipes);
 
     // replaces newline with null
-    slen = strlen(inputString) - 1;
+    if(ampersand == 1){
+       slen = strlen(inputString) - 2;
+    }
+    else{
+        slen = strlen(inputString) - 1;
+    }
     inputString[slen] = 0;
 
     // exits the shell
@@ -210,7 +220,7 @@ int main()
     // }
 
     if(nredirects == 0){
-      runCommand(inputString);
+      runCommand(inputString,ampersand);
     }
 
     // either pipelining or I/O redirection
@@ -352,8 +362,10 @@ int main()
 
         // parent waits for all children to finish
         for(e=0; e<nredirects+1; e++){
-          wait(&status);
-          debug("status: %d completed\n", status);
+	  if(ampersand == 0){
+	    wait(&status);
+	    debug("status: %d completed\n", status);
+	  }
         }
 
       // END shell2.c code
